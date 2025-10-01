@@ -3,8 +3,9 @@ import React, { useState } from 'react';
 // Using lucide-react icons for the form fields
 import { Mail, Lock, User, Phone } from 'lucide-react';
 import { toast } from 'react-toastify';
-import auth from '../api/auth/auth'
+import auth from '../api/authenticate'
 import { getSession, signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 // --- Decorative Pattern Divider ---
 // Using an inline SVG for a crisp, repeatable geometric pattern look, 
 // mimicking the design in the uploaded image's border.
@@ -88,6 +89,8 @@ const LoginPage = ({ onViewChange }) => {
         email: '',
         password: ''
     });
+    const router = useRouter();
+
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -97,40 +100,43 @@ const LoginPage = ({ onViewChange }) => {
 
 
     const handleSignIn = async (e) => {
-        // handle login with next-auth 
         e.preventDefault();
-        console.log("Login Data:", loginData);
         setLoading(true);
         try {
-            const responsse = await signIn('credentials', {
+            const response = await signIn("credentials", {
                 redirect: false,
-                username: loginData.email,
-                password: loginData.password
-            })
+                email: loginData.email,      // ✅ must match CredentialsProvider
+                password: loginData.password,
+            });
 
-            if (responsse.error) {
-                setErrors({ submit: 'Login failed. Please check your credentials.' });
-            }
-            else {
+            if (response.error) {
+                toast.error("Something went wrong, please try again later");
+                setLoading(false);
+                return;
+            } else {
                 const session = await getSession();
-                // const chamaCount = session?.user?.chamaa?.message
+
+                console.log(session);
 
                 if (session?.user?.role === "admin") {
-                    router.push('/adminDashboard')
+                    router.push("/adminDashboard");
                 }
-                else {
-                    router.push('/dashboard')
+                if (session?.user?.role === "customer") {
+                    router.push("/");
                 }
-
-                // router.push('/dashboard')
+                if (session?.user?.role === "vendor") {
+                    router.push("/sellerDashboard");
+                }
+                setLoading(false);
             }
         } catch (error) {
-            toast.error("something went wrong")
-            console.log(error);
+            toast.error("Something went wrong");
+            console.error(error);
+        } finally {
             setLoading(false);
         }
-
     };
+
 
     return (
         // Full screen container, responsive padding
@@ -209,8 +215,8 @@ const LoginPage = ({ onViewChange }) => {
 // --- Sign Up Page Component (New Component) ---
 const SignUpPage = ({ onViewChange }) => {
     const [signupData, setSignupData] = useState({
-        firstName: '',
-        lastName: '',
+        firstname: '',
+        lastname: '',
         phone: '',
         email: '',
         password: '',
@@ -225,8 +231,8 @@ const SignUpPage = ({ onViewChange }) => {
 
     // function to validate the signup inputs 
     const validateInputs = () => {
-        const { firstName, lastName, phone, email, password, confirmPassword } = signupData;
-        if (!firstName || !lastName || !phone || !email || !password || !confirmPassword) {
+        const { firstname, lastname, phone, email, password, confirmPassword } = signupData;
+        if (!firstname || !lastname || !phone || !email || !password || !confirmPassword) {
             toast.error('Please fill in all fields.');
             return false;
         }
@@ -296,8 +302,8 @@ const SignUpPage = ({ onViewChange }) => {
 
                         {/* 2-Column Grid for Name and Contact */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
-                            <SignupInputField label="First Name" type="text" name="firstName" placeholder="firstname" onChange={handleInputChange} />
-                            <SignupInputField label="Last Name" type="text" name="lastName" placeholder="Kisilu" onChange={handleInputChange} />
+                            <SignupInputField label="First Name" type="text" name="firstname" placeholder="firstname" onChange={handleInputChange} />
+                            <SignupInputField label="Last Name" type="text" name="lastname" placeholder="Kisilu" onChange={handleInputChange} />
                             <SignupInputField label="Phone" type="tel" name="phone" placeholder="phone" onChange={handleInputChange} />
                             <SignupInputField label="Email" type="email" name="email" placeholder="email" onChange={handleInputChange} />
                         </div>

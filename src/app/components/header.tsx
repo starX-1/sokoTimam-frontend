@@ -1,18 +1,41 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, LogIn, Menu, Search, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { ShoppingCart, LogIn, Menu, Search, X, ChevronDown, ChevronUp, User } from 'lucide-react';
 import Link from 'next/link';
-
+import { getSession } from 'next-auth/react';
+interface User {
+    accessToken: string,
+    email: string,
+    firstname: string,
+    id: number,
+    lastname: string,
+    phone: string,
+    role: string,
+    sub: number
+}
 const Header = () => {
     // State for the main mobile menu (hamburger menu)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     // New state for the desktop/tablet Categories dropdown
     const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+    const [logedInUser, setLogedInUser] = useState<User | null>(null);
+
 
     // Function to close the category dropdown
     const handleCategoryToggle = () => {
         setIsCategoriesOpen(prev => !prev);
     };
+
+    const getUserFromSession = async () => {
+        const response = await getSession();
+        if (response?.user) {
+            setLogedInUser(response.user as User)
+        }
+    }
+
+    useEffect(() => {
+        getUserFromSession()
+    }, [])
 
     const categories = [
         { name: 'Electronics & Gadgets', href: '#' },
@@ -57,14 +80,17 @@ const Header = () => {
 
                     {/* Logo */}
                     {/* Placeholder image for '/soko.png' */}
-                    <img
-                        src="/soko.png"
-                        alt='Soko Logo'
-                        width={100}
-                        height={30}
-                        // Added w-[80px] for better mobile scaling
-                        className="rounded-md w-[80px] sm:w-[100px] h-auto transition-all"
-                    />
+                    <Link href="/">
+                        <img
+                            src="/soko.png"
+                            alt='Soko Logo'
+                            width={100}
+                            height={30}
+                            // Added w-[80px] for better mobile scaling
+                            className="rounded-md w-[80px] sm:w-[100px] h-auto transition-all"
+                        />
+                    </Link>
+
                 </div>
 
                 {/* 2. Center: Search Bar (Hidden on Small Screens, large on desktop) */}
@@ -87,11 +113,21 @@ const Header = () => {
                         <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
                         <span className="hidden sm:inline font-medium">Cart | 0</span>
                     </Link>
+                    {
+                        logedInUser ? (
+                            <Link href={'/profile'} className="flex items-center space-x-1 hover:text-orange-600 text-gray-700 transition">
+                                <User className="w-5 h-5 sm:w-6 sm:h-6" />
+                                <span className="hidden sm:inline font-medium">Profile</span>
+                            </Link>
+                        ) : (
+                            <Link href="/login" className="flex items-center space-x-1 hover:text-orange-600 text-gray-700 transition">
+                                <LogIn className="w-5 h-5 sm:w-6 sm:h-6" />
+                                <span className="hidden sm:inline font-medium">Login</span>
+                            </Link>
+                        )
+                    }
 
-                    <Link href="/login" className="flex items-center space-x-1 hover:text-orange-600 text-gray-700 transition">
-                        <LogIn className="w-5 h-5 sm:w-6 sm:h-6" />
-                        <span className="hidden sm:inline font-medium">Login</span>
-                    </Link>
+
 
                     {/* Utility Buttons (Visible on Larger Screens) */}
                     <span className="hidden lg:inline text-gray-300">|</span>
@@ -99,9 +135,11 @@ const Header = () => {
                         <button className="text-orange-600 border border-orange-600 px-3 py-1.5 rounded-full hover:bg-orange-50 transition duration-150 shadow-sm font-semibold">
                             Get the App
                         </button>
-                        <button className="text-gray-700 border border-gray-300 px-3 py-1.5 rounded-full hover:bg-gray-50 transition duration-150 shadow-sm font-semibold">
-                            Ship To [Address]
-                        </button>
+                        {logedInUser && (
+                            <button className="text-gray-700 border border-gray-300 px-3 py-1.5 rounded-full hover:bg-gray-50 transition duration-150 shadow-sm font-semibold">
+                                Ship To {logedInUser?.firstname}
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

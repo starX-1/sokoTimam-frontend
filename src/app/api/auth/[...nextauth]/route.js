@@ -8,36 +8,37 @@ const api = axios.create({
 
 const authUrl = "user/login";
 
-// NextAuth options
 const authOptions = {
     providers: [
         CredentialsProvider({
             name: "Credentials",
             credentials: {
-                email: { label: "email", type: "email" },
+                email: { label: "Email", type: "email" },
                 password: { label: "Password", type: "password" },
             },
             async authorize(credentials) {
+                console.log("authorize() got credentials:", credentials);
+
                 try {
-                    const { data } = await api.post(authUrl, {
+                    const { data } = await api.post("user/login", {
                         email: credentials.email,
                         password: credentials.password,
                     });
 
-                    const loginData = data?.data;
+                    console.log("API response:", data);
 
-                    if (loginData && loginData.authToken) {
-                        // Return the full user + tokens
-                        return {
-                            ...loginData, // includes user, authToken, refreshToken
-                        };
+                    const { token, user } = data;
+                    if (token && user) {
+                        return { ...user, accessToken: token }; // ✅ must return object
                     }
+
                     return null;
                 } catch (error) {
                     console.error("Login error:", error.response?.data || error.message);
                     return null;
                 }
-            },
+            }
+
         }),
     ],
     pages: {
@@ -49,18 +50,14 @@ const authOptions = {
     callbacks: {
         async jwt({ token, user }) {
             if (user) {
-                // Store everything in token
-                token.user = user.user; // The actual user object
-                token.authToken = user.authToken;
-                token.refreshToken = user.refreshToken;
+                token.accessToken = user.token; // backend token
+                token.user = user.user || user; // ensure user object is stored
             }
             return token;
         },
         async session({ session, token }) {
-            // Attach everything to session
             session.user = token.user;
-            session.authToken = token.authToken;
-            session.refreshToken = token.refreshToken;
+            session.accessToken = token.accessToken;
             return session;
         },
     },

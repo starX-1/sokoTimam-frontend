@@ -1,9 +1,9 @@
-import instance from "../../Hooks/axios";
+import instance from "../Hooks/axios";
 
 
 class Auth {
     async register(data) {
-        const response = await instance.post("register", data)
+        const response = await instance.post("user", data)
         return response.data;
     }
 
