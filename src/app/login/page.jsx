@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react';
 // Using lucide-react icons for the form fields
-import { Mail, Lock, User, Phone } from 'lucide-react';
+import { Mail, Lock, User, Phone, EyeIcon, EyeOffIcon } from 'lucide-react';
 import { toast } from 'react-toastify';
 import auth from '../api/authenticate'
 import { getSession, signIn } from 'next-auth/react';
@@ -73,11 +73,11 @@ const SignupInputField = ({ label, type, name, placeholder, onChange }) => (
             required
         />
         {/* Mock visual for password strength */}
-        {type === 'password' && (
+        {/* {type === 'password' && (
             <div className="mt-1">
                 <span className="text-xs text-green-600">Strong Password</span>
             </div>
-        )}
+        )} */}
     </div>
 );
 
@@ -90,6 +90,9 @@ const LoginPage = ({ onViewChange }) => {
         password: ''
     });
     const router = useRouter();
+
+    const [showPassword, setShowPassword] = useState(false);
+
 
 
     const handleInputChange = (e) => {
@@ -158,7 +161,31 @@ const LoginPage = ({ onViewChange }) => {
                 {/* Form Content */}
                 <form onSubmit={handleSignIn} className="p-8 pt-10">
                     <LoginInputGroup icon={Mail} type="email" placeholder="Email" name="email" onChange={handleInputChange} />
-                    <LoginInputGroup icon={Lock} type="password" placeholder="Password" name="password" onChange={handleInputChange} />
+                    <div className="relative mb-6">
+                        {/* Input field */}
+                        <LoginInputGroup
+                            icon={Lock}
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Password"
+                            name="password"
+                            onChange={handleInputChange}
+                        />
+
+                        {/* Eye icon toggle */}
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600 cursor-pointer">
+                            {showPassword ? (
+                                <button type="button" onClick={() => setShowPassword(false)}>
+                                    <EyeIcon />
+                                </button>
+                            ) : (
+                                <button type="button" onClick={() => setShowPassword(true)}>
+                                    <EyeOffIcon />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+
 
                     {/* Forgot Password Link */}
                     <div className="flex justify-end mb-8 text-sm">
@@ -228,6 +255,9 @@ const SignUpPage = ({ onViewChange }) => {
         const { name, value } = e.target;
         setSignupData({ ...signupData, [name]: value });
     };
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+    const router = useRouter();
 
     // function to validate the signup inputs 
     const validateInputs = () => {
@@ -264,6 +294,12 @@ const SignUpPage = ({ onViewChange }) => {
         try {
             const res = await auth.register(signupData);
             console.log(res);
+            if (res.message === "User created successfully. Please check your email for the verification code.") {
+                toast.success(res.message);
+                // onViewChange('login');
+                router.push('/verifyEmail');
+                setLoading(false);
+            }
         } catch (error) {
             toast.error("something went wrong")
             console.log(error);
@@ -310,8 +346,52 @@ const SignUpPage = ({ onViewChange }) => {
 
                         {/* 2-Column Grid for Passwords */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
-                            <SignupInputField label="Password" type="password" name="password" placeholder="password" onChange={handleInputChange} />
-                            <SignupInputField label="Confirm Password" type="password" name="confirmPassword" placeholder="confirm password" onChange={handleInputChange} />
+                            {/* Password input with eye icon for show/hide */}
+                            <div className="relative mb-6">
+                                <SignupInputField
+                                    label="Password"
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    placeholder="Password"
+                                    onChange={handleInputChange}
+                                />
+
+                                {/* Eye Icon positioned inside the input container */}
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 mb-5 text-gray-600">
+                                    {showPassword ? (
+                                        <button type="button" onClick={() => setShowPassword(false)}>
+                                            <EyeIcon />
+                                        </button>
+                                    ) : (
+                                        <button type="button" onClick={() => setShowPassword(true)}>
+                                            <EyeOffIcon />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="relative mb-6">
+                                <SignupInputField
+                                    label="Confirm Password"
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    name="confirmPassword"
+                                    placeholder="Confirm Password"
+                                    onChange={handleInputChange}
+                                />
+
+                                {/* Eye Icon positioned inside the input container */}
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 mb-5 text-gray-600">
+                                    {showConfirmPassword ? (
+                                        <button type="button" onClick={() => setShowConfirmPassword(false)}>
+                                            <EyeIcon />
+                                        </button>
+                                    ) : (
+                                        <button type="button" onClick={() => setShowConfirmPassword(true)}>
+                                            <EyeOffIcon />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
                         {/* Terms and Conditions Checkbox */}
@@ -329,12 +409,27 @@ const SignUpPage = ({ onViewChange }) => {
 
                         {/* Button and Sign In Link */}
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-10">
-                            <button
-                                type="submit"
-                                className="bg-[#985942] text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-md hover:bg-[#864c37] transition duration-200 w-full sm:w-auto"
-                            >
-                                Create Account
-                            </button>
+                            {loading ? (
+                                <div
+                                    type="button"
+                                    className="flex items-center justify-center bg-[#985942] text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-md hover:bg-[#864c37] transition duration-200 w-full sm:w-auto"
+                                    disabled
+                                >
+                                    <svg className="animate-spin h-5 w-5 mr-2 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+
+                                    <span className="ml-2">Wait...</span>
+                                </div>
+                            ) : (
+                                <button
+                                    type="submit"
+                                    className="bg-[#985942] text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-md hover:bg-[#864c37] transition duration-200 w-full sm:w-auto"
+                                >
+                                    Create Account
+                                </button>
+                            )}
 
                             <div className="mt-4 sm:mt-0 text-sm text-gray-600">
                                 Already have an account{' '}
@@ -349,8 +444,8 @@ const SignUpPage = ({ onViewChange }) => {
                         </div>
                     </form>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 
