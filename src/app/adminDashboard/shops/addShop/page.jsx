@@ -51,7 +51,7 @@ const AddShopView = () => {
     });
 
     const [userOptions, setUserOptions] = useState([]);
-    // const [admin, setAdmin] = useState(null);
+    const [admin, setAdmin] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
     const [filteredUsers, setFilteredUsers] = useState([]);
@@ -76,7 +76,7 @@ const AddShopView = () => {
     useEffect(() => {
         const loadData = async () => {
             const adminSession = await getSession();
-            // setAdmin(adminSession);
+            setAdmin(adminSession);
             const response = await Users.getAll(adminSession);
             setUserOptions(response?.users || []);
         };
@@ -158,7 +158,11 @@ const AddShopView = () => {
         });
 
         try {
-            const res = await Shops.createShop(shopData);
+            const enrichedShopData = {
+                ...shopData,
+                accessToken: admin.user.accessToken
+            }
+            const res = await Shops.createShop(enrichedShopData);
             console.log(res);
 
         } catch (error) {

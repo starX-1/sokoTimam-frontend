@@ -1,12 +1,26 @@
+// import { headers } from "next/headers";
 import instance from "../../Hooks/axios";
 
 class Shops {
     async createShop(data) {
-        const response = await instance.post('/shop', data);
+        const response = await instance.post('/shop',
+            data, // 1. The data (request body)
+            { // 2. The config object (third argument)
+                headers: {
+                    Authorization: `Bearer ${data.accessToken}` // Correctly placed in headers
+                }
+            }
+        );
         return response.data;
     }
-    async getAllShops() {
-        const response = await instance.get('/shop');
+    async getAllShops(accessToken) {
+        const response = await instance.get('/shop',
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}` // Correctly placed in headers
+                }
+            }
+        );
         return response.data;
 
     }
