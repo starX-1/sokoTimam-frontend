@@ -1,7 +1,9 @@
 'use client'
 import { Box, Layers, Search, Tag } from "lucide-react";
 // Removed: import { useRouter } from "next/navigation";
-import Products from '../../api/products/api' 
+import Products from '../../api/products/api'
+import Shop from '../../api/shop/api'
+import Categories from '../../api/categories/api'
 import { useEffect, useState } from "react";
 
 // --- Mock Data and API Replacement ---
@@ -50,9 +52,9 @@ const ProductsView = () => {
         const fetchProducts = async () => {
             try {
                 // Using mock function to resolve the build error
-                const response = await mockGetProducts(); 
+                const response = await mockGetProducts();
                 // Assuming response.products is the array of product objects
-                setProducts(response.products || []) 
+                setProducts(response.products || [])
             } catch (error) {
                 console.error("Failed to fetch products:", error);
                 setProducts([]); // Clear products on error
@@ -62,7 +64,34 @@ const ProductsView = () => {
         };
         fetchProducts()
     }, [])
-    
+
+    // useeffect to fetch shops by id and also categories by id and display them
+    useEffect(() => {
+        const enrichProducts = async () => {
+            try {
+                const shoRes = await Promise.all(
+                    products.map(async (product) => {
+                        const shopRes = await Shop.getShopById(product.shopId);
+                        const categoryRes = await Categories.getCategoryById(product.categoryId);
+                        return {
+                            ...product,
+                            shop: shopRes?.shop,
+                            category: categoryRes.category.name,
+                        };
+                    })
+                );
+                setProducts(shoRes);
+            } catch (error) {
+                console.error("Error enriching products:", error);
+            }
+        }
+        if (products.length > 0) {
+            enrichProducts()
+        }
+    }, [products])
+
+    console.log(products)
+
     // Function to format KSH currency
     const formatCurrency = (amountString) => {
         // Safely convert the price string (e.g., "1500.00") to a number
@@ -76,8 +105,14 @@ const ProductsView = () => {
     // Conditional render for loading state
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center h-40">
-                <p className="text-gray-500">Loading products...</p>
+            <div className="flex justify-center items-center h-screen">
+                <p className="text-gray-500 flex items-center space-x-2">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.649z"></path>
+                    </svg>
+                    Loading...
+                </p>
             </div>
         );
     }
@@ -157,11 +192,11 @@ const ProductsView = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                             {/* Using shopId as a placeholder for the shop name */}
-                                            <p>Shop ID: {product.shopId}</p>
+                                            <p>Shop: {product?.shop?.name}</p>
                                             <p className="text-xs text-gray-500 flex items-center mt-1">
                                                 <Layers className="w-3 h-3 mr-1" />
                                                 {/* Using categoryId as a placeholder for the category name */}
-                                                Category ID: {product.categoryId}
+                                                Category: {product.category}
                                             </p>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">

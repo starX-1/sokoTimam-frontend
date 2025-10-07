@@ -3,12 +3,12 @@ import instance from "../../Hooks/axios";
 class Categories {
 
   async getCategories() {
-    const response = await instance.get("/categories");
+    const response = await instance.get("/category");
     return response.data;
   }
 
   async getCategoryById(id) {
-    const response = await instance.get(`/categories/${id}`);
+    const response = await instance.get(`/category/${id}`);
     return response.data;
   }
 
@@ -28,3 +28,5 @@ class Categories {
   }
 
 }
+
+export default new Categories();

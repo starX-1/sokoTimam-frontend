@@ -8,31 +8,47 @@ import { useRouter } from "next/navigation";
 import Shops from '../../../api/shop/api'
 import { toast } from "react-toastify";
 
+const InputGroup = ({
+    label,
+    icon: Icon,
+    disabled,
+    type = "text",
+    name,
+    placeholder,
+    isRequired = true,
+    value,
+    onChange,
+}) => {
+    const inputProps = {
+        id: name,
+        name,
+        placeholder,
+        required: isRequired,
+        disabled,
+        onChange,
+        className: `w-full py-3 pl-10 pr-4 border border-orange-200 rounded-xl shadow-inner 
+    focus:outline-none focus:ring-orange-500 focus:border-orange-500 transition duration-150 text-gray-800 
+    ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`,
+    };
 
-const InputGroup = ({ label, icon: Icon, disabled, type = "text", name, placeholder, isRequired = true, value, onChange: onChange }) => {
-    // Use the propOnChange if provided, otherwise use the global/local default one
-    // const handler = propOnChange || defaultHandleChange;
+    // ❌ Don't bind value for file input
+    if (type !== "file") {
+        inputProps.value = value;
+    }
 
     return (
         <div className="mb-6">
-            <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+            <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+                {label}
+            </label>
             <div className="relative">
                 <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                    type={type}
-                    id={name}
-                    name={name}
-                    placeholder={placeholder}
-                    required={isRequired}
-                    value={value}
-                    disabled={disabled}
-                    onChange={onChange} // Use the handler
-                    className={`w-full py-3 pl-10 pr-4 border border-orange-200 rounded-xl shadow-inner focus:outline-none focus:ring-orange-500 focus:border-orange-500 transition duration-150 text-gray-800 ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                />
+                <input type={type} {...inputProps} />
             </div>
         </div>
     );
 };
+
 
 const AddShopView = () => {
     const router = useRouter();
@@ -40,8 +56,8 @@ const AddShopView = () => {
         ownerId: '',
         name: "",
         description: "",
-        logoUrl: "",
-        coverUrl: "",
+        logoUrl: null,  // Changed to null for file
+        coverUrl: null, // Changed to null for file
         status: "Active",
         location: '',
         ownerName: '',
@@ -56,23 +72,6 @@ const AddShopView = () => {
     const [showDropdown, setShowDropdown] = useState(false);
     const [filteredUsers, setFilteredUsers] = useState([]);
 
-    // useEffect(() => {
-    //     const fetchAdmin = async () => {
-    //         const adminSession = await getSession();
-    //         setAdmin(adminSession);
-    //     };
-    //     fetchAdmin();
-    // }, []);
-
-    // const fetchUserOptions = async () => {
-    //     try {
-    //         const response = await Users.getAll(admin);
-    //         setUserOptions(response?.users || []);
-    //     } catch (error) {
-    //         console.error('Error fetching user options:', error);
-    //     }
-    // };
-
     useEffect(() => {
         const loadData = async () => {
             const adminSession = await getSession();
@@ -82,7 +81,6 @@ const AddShopView = () => {
         };
         loadData();
     }, []);
-
 
     // Filter users based on search term
     useEffect(() => {
@@ -99,13 +97,24 @@ const AddShopView = () => {
     }, [searchTerm, userOptions]);
 
     const handleChange = (e) => {
-        const { name, value, type, checked, files } = e.target;
-        setShopData(prev => ({
-            ...prev,
-            [name]: type === 'file' ? files[0]
-                : type === 'checkbox' ? checked : value
-        }));
+        const target = e.target;
+        const { name, type, checked } = target;
+
+        if (type === 'file') {
+            const file = target.files && target.files[0];
+            if (file) {
+                console.log(`✅ Selected ${name}:`, file);
+                setShopData(prev => ({ ...prev, [name]: file }));
+            } else {
+                console.warn(`⚠️ No file selected for ${name}   `);
+            }
+        } else if (type === 'checkbox') {
+            setShopData(prev => ({ ...prev, [name]: checked }));
+        } else {
+            setShopData(prev => ({ ...prev, [name]: target.value }));
+        }
     };
+
 
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
@@ -127,8 +136,12 @@ const AddShopView = () => {
     // function to validate the shops data required 
     const validateInputs = () => {
         const { ownerId, name, description, location, logoUrl, coverUrl } = shopData;
-        if (!ownerId || !name || !description || !location || !logoUrl || !coverUrl) {
-            toast.error('Please fill in all fields.');
+        if (!ownerId || !name || !description || !location) {
+            toast.error('Please fill in all required fields.');
+            return false;
+        }
+        if (!logoUrl || !coverUrl) {
+            toast.error('Please upload both logo and cover images.');
             return false;
         }
         return true;
@@ -139,41 +152,47 @@ const AddShopView = () => {
 
         if (!validateInputs()) return;
 
-        // Log all collected data
-        console.log('=== SUBMITTING SHOP DATA ===');
-        console.log('Shop Information:', {
-            ownerId: shopData.ownerId,
-            name: shopData.name,
-            description: shopData.description,
-            location: shopData.location,
-            logoUrl: shopData.logoUrl,
-            coverUrl: shopData.coverUrl,
-            status: shopData.status,
-            verified: shopData.verified
-        });
-        console.log('Owner Information:', {
-            ownerName: shopData.ownerName,
-            ownerEmail: shopData.ownerEmail,
-            ownerPhone: shopData.ownerPhone
-        });
-
         try {
-            const enrichedShopData = {
-                ...shopData,
-                accessToken: admin.user.accessToken
+            const formData = new FormData();
+            formData.append("ownerId", shopData.ownerId);
+            formData.append("name", shopData.name);
+            formData.append("description", shopData.description);
+            formData.append("location", shopData.location);
+            formData.append("status", shopData.status);
+            formData.append("verified", shopData.verified);
+            formData.append("ownerName", shopData.ownerName);
+            formData.append("ownerEmail", shopData.ownerEmail);
+            formData.append("ownerPhone", shopData.ownerPhone);
+
+            // Append the files - FIXED: Now appending the actual File objects
+            if (shopData.logoUrl instanceof File) {
+                formData.append("logo", shopData.logoUrl);
+                console.log("Logo file appended:", shopData.logoUrl.name);
             }
-            const res = await Shops.createShop(enrichedShopData);
-            console.log(res);
+            if (shopData.coverUrl instanceof File) {
+                formData.append("cover", shopData.coverUrl);
+                console.log("Cover file appended:", shopData.coverUrl.name);
+            }
+
+            // Debug: Log FormData contents
+            console.log("FormData contents:");
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value instanceof File ? `File: ${value.name}` : value);
+            }
+
+            const res = await Shops.createShop(formData, admin.user.accessToken);
+            console.log("Response:", res);
+
+            if (res) {
+                toast.success("Shop created successfully!");
+                router.push('/adminDashboard/shops');
+            }
 
         } catch (error) {
-            console.log(error);
-        } finally {
-            console.log('Complete Data Object:', shopData);
-            console.log('============================');
+            console.error("Error submitting shop:", error);
+            toast.error("Failed to create shop. Please try again.");
         }
-
     };
-
 
     return (
         <div className="space-y-6">
@@ -218,9 +237,7 @@ const AddShopView = () => {
                             type="file"
                             onChange={handleChange}
                             name="logoUrl"
-                            // placeholder="https://example.com/logo.png"
-                            // value={shopData.logoUrl}
-                            isRequired={false}
+                            isRequired={true}
                         />
                         <InputGroup
                             label="Cover Image"
@@ -228,11 +245,21 @@ const AddShopView = () => {
                             type="file"
                             name="coverUrl"
                             onChange={handleChange}
-                            // placeholder="https://example.com/cover.jpg"
-                            // value={shopData.coverUrl}
-                            isRequired={false}
+                            isRequired={true}
                         />
                     </div>
+
+                    {/* Show selected file names */}
+                    {(shopData.logoUrl || shopData.coverUrl) && (
+                        <div className="text-sm text-gray-600 space-y-1">
+                            {shopData.logoUrl && (
+                                <div>✓ Logo: {shopData.logoUrl.name}</div>
+                            )}
+                            {shopData.coverUrl && (
+                                <div>✓ Cover: {shopData.coverUrl.name}</div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="mb-6">
                         <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Shop Description</label>

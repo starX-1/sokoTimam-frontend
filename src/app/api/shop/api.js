@@ -2,12 +2,13 @@
 import instance from "../../Hooks/axios";
 
 class Shops {
-    async createShop(data) {
+    async createShop(data, accessToken) {
         const response = await instance.post('/shop',
             data, // 1. The data (request body)
             { // 2. The config object (third argument)
                 headers: {
-                    Authorization: `Bearer ${data.accessToken}` // Correctly placed in headers
+                    Authorization: `Bearer ${accessToken}` , // Correctly placed in headers,
+                    "Content-Type": undefined
                 }
             }
         );
