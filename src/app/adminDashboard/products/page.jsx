@@ -5,6 +5,7 @@ import Products from '../../api/products/api'
 import Shop from '../../api/shop/api'
 import Categories from '../../api/categories/api'
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 // --- Mock Data and API Replacement ---
 // Since the external file '../../api/products/api' cannot be resolved in this environment, 
@@ -121,13 +122,14 @@ const ProductsView = () => {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                 <h2 className="text-3xl font-bold text-gray-800">Product Management</h2>
-                <button
+                <Link
+                    href="/adminDashboard/products/addProduct"
                     // Replaced router.push with a console log to fix Next.js dependency error
-                    onClick={() => console.log('Navigation to Add Product Page is triggered.')}
+                    // onClick={() => console.log('Navigation to Add Product Page is triggered.')}
                     className="mt-4 sm:mt-0 bg-orange-600 text-white px-5 py-2 rounded-xl font-semibold shadow-md hover:bg-orange-700 transition duration-200"
                 >
                     + Add New Product
-                </button>
+                </Link>
             </div>
 
             <div className="bg-white rounded-xl shadow-lg overflow-x-auto">

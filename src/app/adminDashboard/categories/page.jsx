@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 // The 'Categories' import is kept for completeness, but mock data is used for category display
 import Categories from '../../api/categories/api'
 import { getSession } from "next-auth/react";
+import { toast } from "react-toastify";
 
 // --- Component: Create Category Modal ---
 
@@ -58,15 +59,15 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
             onClose(true); // Close and signify a successful action
         } catch (error) {
             console.error("Failed to create category:", error);
-            alert("Failed to create category.");
+            toast.error("Failed to create category.");
             setIsSaving(false);
         }
 
         // Mock success for demonstration
         console.log(`Submitting new category: Name='${name}', Parent ID=${parentIdValue}`);
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+        // await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
         setIsSaving(false);
-        alert(`Category/Subcategory '${name}' created! (Parent ID: ${parentIdValue})`);
+        toast.success(`Category/Subcategory '${name}' created! (Parent ID: ${parentIdValue})`);
         onClose(true); // Close and signify a successful action, which would trigger a data refresh
     };
 
@@ -217,9 +218,15 @@ const CategoriesView = () => {
         fetchCategories();
     }, []);
 
-    // Map to quickly look up category names by ID for parent display
-    const categoryNameMap = categories.reduce((map, cat) => {
-        map[cat.id] = cat.name;
+    // Separate parent categories and subcategories
+    const parentCategories = categories.filter(cat => cat.parentId === null);
+    const subcategoriesMap = categories.reduce((map, cat) => {
+        if (cat.parentId !== null) {
+            if (!map[cat.parentId]) {
+                map[cat.parentId] = [];
+            }
+            map[cat.parentId].push(cat);
+        }
         return map;
     }, {});
 
@@ -227,9 +234,7 @@ const CategoriesView = () => {
     const handleCloseModal = (refresh = false) => {
         setIsModalOpen(false);
         if (refresh) {
-            // In a real app, you'd re-fetch data here to show the newly created category.
-            // For this mock, we skip the refresh since the data is static.
-            console.log("Modal closed, would refresh category list in a live application.");
+            fetchCategories();
         }
     };
 
@@ -271,57 +276,70 @@ const CategoriesView = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-orange-50">
                         <tr>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">ID</th>
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">#SN</th>
                             <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Name</th>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Parent Category</th>
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Subcategories</th>
                             <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Created At</th>
                             <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-100">
-                        {categories.length === 0 ? (
+                        {parentCategories.length === 0 ? (
                             <tr>
                                 <td colSpan="5" className="px-6 py-10 text-center text-gray-500">No categories have been defined yet.</td>
                             </tr>
                         ) : (
-                            categories.map((category) => (
-                                <tr key={category.id} className="hover:bg-orange-50 transition duration-150">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {category.id}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">
-                                        <div className="flex items-center">
-                                            <Folder className="w-4 h-4 mr-2 text-orange-500" />
-                                            {category.name}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        {category.parentId
-                                            ? categoryNameMap[category.parentId] || `ID: ${category.parentId}`
-                                            : <span className="text-gray-400 italic">Root Category</span>
-                                        }
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {formatTimestamp(category.createdAt)}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                                        <button
-                                            onClick={() => console.log(`Editing Category ID: ${category.id}`)}
-                                            className="text-orange-600 hover:text-orange-900 p-1 rounded-full hover:bg-orange-100 transition"
-                                            title="Edit Category"
-                                        >
-                                            <Edit className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => console.log(`Deleting Category ID: ${category.id}`)}
-                                            className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100 transition"
-                                            title="Delete Category"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
+                            parentCategories.map((category, index) => {
+                                const subcategories = subcategoriesMap[category.id] || [];
+                                return (
+                                    <tr key={category.id} className="hover:bg-orange-50 transition duration-150">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {index + 1}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">
+                                            <div className="flex items-center">
+                                                <Folder className="w-4 h-4 mr-2 text-orange-500" />
+                                                {category.name}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                            {subcategories.length > 0 ? (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {subcategories.map((sub) => (
+                                                        <span
+                                                            key={sub.id}
+                                                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800"
+                                                        >
+                                                            {sub.name}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span className="text-gray-400 italic">No subcategories</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {formatTimestamp(category.createdAt)}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                                            <button
+                                                onClick={() => console.log(`Editing Category ID: ${category.id}`)}
+                                                className="text-orange-600 hover:text-orange-900 p-1 rounded-full hover:bg-orange-100 transition"
+                                                title="Edit Category"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => console.log(`Deleting Category ID: ${category.id}`)}
+                                                className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100 transition"
+                                                title="Delete Category"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         )}
                     </tbody>
                 </table>
@@ -329,7 +347,7 @@ const CategoriesView = () => {
 
             <div className="flex justify-center p-4">
                 <div className="text-sm text-gray-500">
-                    Showing 1 to {categories.length} of {categories.length} results
+                    Showing 1 to {parentCategories.length} of {parentCategories.length} results
                 </div>
             </div>
 
