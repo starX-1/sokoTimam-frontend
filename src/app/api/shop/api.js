@@ -29,8 +29,13 @@ class Shops {
         const response = await instance.get(`/shop/${id}`);
         return response.data;
     }
-    async updateShop(id, data) {
-        const response = await instance.put(`/shop/${id}`, data);
+    async updateShop(id, data, accessToken) {
+        const response = await instance.put(`/shop/${id}`, data, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": undefined
+            }
+        });
         return response.data;
     }
 

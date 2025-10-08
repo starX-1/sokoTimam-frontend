@@ -42,13 +42,10 @@ const getRoleStyles = (role) => {
 
 const UsersView = ({ onViewChange }) => {
     // Mock data for users
-    const mockUsers = [
-        { id: 'U001', name: 'John Doe', email: 'john.doe@example.com', role: 'Admin', status: 'Active', dateJoined: '2022-01-10', avatar: 'https://placehold.co/40x40/6D28D9/ffffff?text=JD' },
-        { id: 'U002', name: 'Jane Smith', email: 'jane.smith@example.com', role: 'Shop Owner', status: 'Active', dateJoined: '2023-05-15', avatar: 'https://placehold.co/40x40/1D4ED8/ffffff?text=JS' },
-        { id: 'U003', name: 'Omar Hassan', email: 'omar.hassan@example.com', role: 'Shop Owner', status: 'Suspended', dateJoined: '2023-08-01', avatar: 'https://placehold.co/40x40/9D174D/ffffff?text=OH' },
-        { id: 'U004', name: 'Kiplagat A.', email: 'kiplagat@customer.com', role: 'Customer', status: 'Active', dateJoined: '2024-01-20', avatar: 'https://placehold.co/40x40/F59E0B/ffffff?text=KA' },
-        { id: 'U005', name: 'Sarah Mute', email: 'sarah.m@customer.com', role: 'Customer', status: 'Active', dateJoined: '2024-03-05', avatar: 'https://placehold.co/40x40/059669/ffffff?text=SM' },
-    ];
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const [roleFilter, setRoleFilter] = useState('All Roles');
+    const [statusFilter, setStatusFilter] = useState('All Statuses');
     const [users, setUsers] = useState([]);
 
     useEffect(() => {
@@ -72,6 +69,14 @@ const UsersView = ({ onViewChange }) => {
         return date.toLocaleDateString('en-US', options);
     }
 
+    const filteredUsers = users.filter(user => {
+        const matchesSearch = user.firstname.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.email.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesRole = roleFilter === 'All Roles' || user.role === roleFilter;
+        const matchesStatus = statusFilter === 'All Statuses' || user.status === statusFilter;
+        return matchesSearch && matchesRole && matchesStatus;
+    });
+
 
     return (
         <div className="space-y-6">
@@ -92,20 +97,29 @@ const UsersView = ({ onViewChange }) => {
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input
                             type="text"
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            value={searchTerm}
                             placeholder="Search by name or email..."
                             className="w-full py-2 pl-10 pr-4 border border-gray-200 rounded-xl text-sm focus:outline-none text-orange-700 focus:ring-orange-500 focus:border-orange-500"
                         />
                     </div>
                     <div className="flex space-x-3 w-full md:w-auto">
-                        <select className="flex-1 py-2 px-4 border border-gray-200 rounded-xl text-sm focus:outline-none text-orange-700 focus:ring-orange-500 focus:border-orange-500">
+                        <select
+                            value={roleFilter}
+                            onChange={(e) => setRoleFilter(e.target.value)}
+                            className="flex-1 py-2 px-4 border border-gray-200 rounded-xl text-sm focus:outline-none text-orange-700 focus:ring-orange-500 focus:border-orange-500">
                             <option>All Roles</option>
-                            <option>Admin</option>
+                            <option>admin</option>
                             <option>Shop Owner</option>
-                            <option>Customer</option>
+                            <option>customer</option>
                         </select>
-                        <select className="flex-1 py-2 px-4 border border-gray-200 rounded-xl text-sm focus:outline-none text-orange-700 focus:ring-orange-500 focus:border-orange-500">
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="flex-1 py-2 px-4 border border-gray-200 rounded-xl text-sm focus:outline-none text-orange-700 focus:ring-orange-500 focus:border-orange-500">
                             <option>All Statuses</option>
-                            <option>Active</option>
+                            <option>Verified</option>
+                            <option>unverified</option>
                             <option>Suspended</option>
                         </select>
                     </div>
@@ -123,7 +137,7 @@ const UsersView = ({ onViewChange }) => {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-100">
-                        {users.map((user) => (
+                        {filteredUsers.map((user) => (
                             <tr key={user.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     <div className="flex items-center space-x-3">
@@ -173,7 +187,7 @@ const UsersView = ({ onViewChange }) => {
 
             {/* Pagination Placeholder */}
             <div className="flex justify-center p-4">
-                <div className="text-sm text-gray-500">Showing 1 to {users.length} of {users.length} results</div>
+                <div className="text-sm text-gray-500">Showing 1 to {filteredUsers.length} of {filteredUsers.length} results</div>
             </div>
         </div>
     );

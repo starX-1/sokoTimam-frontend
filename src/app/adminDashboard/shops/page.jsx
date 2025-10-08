@@ -18,7 +18,7 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
         logo: '',
         cover: ''
     });
-    
+
     const [logoFile, setLogoFile] = useState(null);
     const [coverFile, setCoverFile] = useState(null);
     const [logoPreview, setLogoPreview] = useState('');
@@ -59,18 +59,18 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
 
         // Validate file type
         if (!file.type.startsWith('image/')) {
-            setErrors(prev => ({ 
-                ...prev, 
-                [type]: 'Please select a valid image file' 
+            setErrors(prev => ({
+                ...prev,
+                [type]: 'Please select a valid image file'
             }));
             return;
         }
 
         // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
-            setErrors(prev => ({ 
-                ...prev, 
-                [type]: 'File size must be less than 5MB' 
+            setErrors(prev => ({
+                ...prev,
+                [type]: 'File size must be less than 5MB'
             }));
             return;
         }
@@ -106,11 +106,11 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
 
     const validateForm = () => {
         const newErrors = {};
-        
+
         if (!formData.name.trim()) {
             newErrors.name = 'Shop name is required';
         }
-        
+
         if (!formData.description.trim()) {
             newErrors.description = 'Description is required';
         } else if (formData.description.trim().length < 10) {
@@ -123,13 +123,13 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!validateForm()) {
             return;
         }
 
         setIsSubmitting(true);
-        
+
         try {
             // Prepare data to send - you'll need to handle file upload here
             const submitData = {
@@ -140,13 +140,13 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
             };
 
             console.log('Submit Data:', submitData);
-            
+
             await onSave(shop.id, submitData);
             onClose();
         } catch (error) {
-            setErrors(prev => ({ 
-                ...prev, 
-                submit: 'Failed to save changes. Please try again.' 
+            setErrors(prev => ({
+                ...prev,
+                submit: 'Failed to save changes. Please try again.'
             }));
         } finally {
             setIsSubmitting(false);
@@ -477,6 +477,19 @@ const ShopsView = () => {
         }
     };
 
+    // function to handle search and status filter
+    // const handleSearchAndFilter = () => {
+    //     const filteredShops = shops.filter(shop => {
+    //         const shopName = shop.name.toLowerCase();
+    //         const shopStatus = shop.status.toLowerCase();
+    //         return (
+    //             shopName.includes(searchTerm.toLowerCase()) &&
+    //             (statusFilter === 'All Statuses' || shopStatus === statusFilter.toLowerCase())
+    //         );
+    //     });
+    //     setShops(filteredShops);
+    // };
+
     const handleEditClick = (shop) => {
         setSelectedShop(shop);
         setIsEditModalOpen(true);
@@ -485,13 +498,27 @@ const ShopsView = () => {
     const handleSaveShop = async (shopId, updatedData) => {
         try {
             const adminSession = await getSession();
+
+            // add logo and cover keys to updatedData
+            if (updatedData.logoFile) {
+                updatedData.logo = updatedData.logoFile;
+            }
+            if (updatedData.coverFile) {
+                updatedData.cover = updatedData.coverFile;
+            }
             // Call your API to update the shop
-            // await Shops.updateShop(shopId, updatedData, adminSession.user.accessToken);
+            const res = await Shops.updateShop(shopId, updatedData, adminSession.user.accessToken);
+
+            console.log(res)
 
             // Update local state
-            setShops(shops.map(shop =>
-                shop.id === shopId ? { ...shop, ...updatedData } : shop
-            ));
+            // setShops(shops.map(shop =>
+            //     shop.id === shopId ? { ...shop, ...updatedData } : shop
+            // ));
+
+            // refetch shops 
+            const res2 = await Shops.getAllShops(adminSession.user.accessToken);
+            setShops(res2.shops);
 
             setIsEditModalOpen(false);
             console.log('Shop updated:', shopId, updatedData);
@@ -536,7 +563,7 @@ const ShopsView = () => {
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="w-full md:w-auto py-2 px-4 border border-gray-200 rounded-xl text-sm focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full md:w-auto py-2 px-4 border border-gray-200 rounded-xl text-sm focus:outline-none text-gray-800 focus:ring-orange-500 focus:border-orange-500"
                     >
                         <option>All Statuses</option>
                         <option>Active</option>

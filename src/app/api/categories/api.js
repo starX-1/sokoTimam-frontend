@@ -12,8 +12,12 @@ class Categories {
     return response.data;
   }
 
-  async createCategory(category) {
-    const response = await instance.post("/categories", category);
+  async createCategory(category, accessToken) {
+    const response = await instance.post("/category", category,{
+      headers:{
+        Authorization: `Bearer ${accessToken}`,
+      }
+    });
     return response.data;
   }
 
