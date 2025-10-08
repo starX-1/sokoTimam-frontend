@@ -1,8 +1,13 @@
 import instance from '../../Hooks/axios'
 class Products {
-    async createProduct(data) {
+    async createProduct(accessToken, data) {
         try {
-            const response = await instance.post('/product', data)
+            const response = await instance.post('/products', data, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": undefined
+                }
+            })
             return response.data
         } catch (error) {
             console.log(error)

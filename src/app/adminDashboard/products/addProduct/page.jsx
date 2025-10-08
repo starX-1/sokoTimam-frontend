@@ -4,6 +4,34 @@ import { AlignLeft, Box, DollarSign, Hash, Image, Layers, Package, Store, Tag, T
 import Shops from '../../../api/shop/api'
 import { getSession } from 'next-auth/react';
 import Categories from '../../../api/categories/api'
+import Products from '../../../api/products/api'
+import { toast } from 'react-toastify';
+import { useRouter } from 'next/navigation';
+
+
+// InputGroup component remains the same
+// ✅ DEFINE THE COMPONENT OUTSIDE
+const InputGroup = ({ label, icon: Icon, type = 'text', name, placeholder, isRequired = true, value, min = null, onChange }) => (
+    <div className="mb-6">
+        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        <div className="relative">
+            {Icon && <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />}
+            <input
+                type={type}
+                id={name}
+                name={name}
+                placeholder={placeholder}
+                required={isRequired}
+                value={value}
+                min={min}
+                onChange={onChange} // Use the passed-in onChange prop
+                className={`w-full py-3 ${Icon ? 'pl-10' : 'pl-4'} pr-4 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:border-orange-500 transition duration-150 text-gray-800`}
+                step={type === 'number' && name === 'price' ? '0.01' : (type === 'number' ? '1' : undefined)}
+            />
+        </div>
+    </div>
+);
+
 
 const AddProductView = ({ onViewChange }) => {
     // State for product data
@@ -25,9 +53,11 @@ const AddProductView = ({ onViewChange }) => {
     // State for fetched data
     const [shops, setShops] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [everyCat, setEveryCat] = useState([]);
     const [subcategories, setSubcategories] = useState([]);
     const [loading, setLoading] = useState(false);
     const [adminSession, setAdminSession] = useState(null);
+    const router = useRouter();
 
     // Fetch shops and categories on component mount
     useEffect(() => {
@@ -45,7 +75,13 @@ const AddProductView = ({ onViewChange }) => {
                 // Fetch categories
                 const categoriesResponse = await Categories.getCategories();
                 // const categoriesData = await categoriesResponse.json();
-                setCategories(categoriesResponse.categories);
+                // filter out categories with parentId because they are sub categories by default 
+                const filteredCategories = categoriesResponse.categories.filter(category => !category.parentId);
+                setCategories(filteredCategories);
+                console.log("retrieved categories", categoriesResponse.categories)
+                setEveryCat(categoriesResponse.categories);
+                // 
+                // setCategories(categoriesResponse.categories);
             } catch (error) {
                 console.error('Error fetching initial data:', error);
             } finally {
@@ -59,11 +95,15 @@ const AddProductView = ({ onViewChange }) => {
     // Filter subcategories when category changes
     useEffect(() => {
         if (productData.categoryId) {
+            console.log(productData)
             const fetchSubcategories = async () => {
                 try {
-                    const response = await fetch(`/api/categories/${productData.categoryId}/subcategories`);
-                    const subcategoriesData = await response.json();
-                    setSubcategories(subcategoriesData);
+                    // console.log("second fetch", everyCat)
+                    // filter out the categories whose parentId equal the selected category id 
+                    const filteredCategories = everyCat.filter(category => category.parentId === parseInt(productData.categoryId));
+                    console.log("filtered categories", filteredCategories)
+                    setSubcategories(filteredCategories);
+                    console.log(filteredCategories)
                 } catch (error) {
                     console.error('Error fetching subcategories:', error);
                     setSubcategories([]);
@@ -96,10 +136,10 @@ const AddProductView = ({ onViewChange }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         try {
             const formData = new FormData();
-            
+
             // Append all product data
             Object.keys(productData).forEach(key => {
                 if (key === 'images') {
@@ -112,14 +152,12 @@ const AddProductView = ({ onViewChange }) => {
                 }
             });
 
-            const response = await fetch('/api/products', {
-                method: 'POST',
-                body: formData,
-            });
+            const response = await Products.createProduct(adminSession.user.accessToken, formData);
 
-            if (response.ok) {
-                console.log('Product added successfully!');
-                onViewChange('#/products');
+            if (response.message === "Product created successfully") {
+                toast.success("Product created successfully");
+                router.push('/adminDashboard/products');
+                // onViewChange('#/products');
             } else {
                 console.error('Failed to add product');
             }
@@ -128,27 +166,7 @@ const AddProductView = ({ onViewChange }) => {
         }
     };
 
-    // InputGroup component remains the same
-    const InputGroup = ({ label, icon: Icon, type = 'text', name, placeholder, isRequired = true, value, min = null }) => (
-        <div className="mb-6">
-            <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-            <div className="relative">
-                {Icon && <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />}
-                <input
-                    type={type}
-                    id={name}
-                    name={name}
-                    placeholder={placeholder}
-                    required={isRequired}
-                    value={value}
-                    min={min}
-                    onChange={handleChange}
-                    className={`w-full py-3 ${Icon ? 'pl-10' : 'pl-4'} pr-4 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:border-orange-500 transition duration-150 text-gray-800`}
-                    step={type === 'number' && name === 'price' ? '0.01' : (type === 'number' ? '1' : undefined)}
-                />
-            </div>
-        </div>
-    );
+
 
     return (
         <div className="space-y-6">
@@ -178,6 +196,7 @@ const AddProductView = ({ onViewChange }) => {
                                 name="name"
                                 placeholder="e.g., Hand-Carved Wooden Rhino"
                                 value={productData.name}
+                                onChange={handleChange}
                             />
                             <InputGroup
                                 label="SKU (Stock Keeping Unit)"
@@ -185,6 +204,7 @@ const AddProductView = ({ onViewChange }) => {
                                 name="sku"
                                 placeholder="e.g., WCR-001"
                                 value={productData.sku}
+                                onChange={handleChange}
                             />
                         </div>
 
@@ -268,6 +288,7 @@ const AddProductView = ({ onViewChange }) => {
                                 name="price"
                                 placeholder="e.g., 1500.00"
                                 value={productData.price}
+                                onChange={handleChange}
                                 min="0"
                             />
                             <InputGroup
@@ -277,6 +298,7 @@ const AddProductView = ({ onViewChange }) => {
                                 name="stock"
                                 placeholder="e.g., 50"
                                 value={productData.stock}
+                                onChange={handleChange}
                                 min="0"
                             />
                         </div>
@@ -298,7 +320,7 @@ const AddProductView = ({ onViewChange }) => {
                                     <option value="Pending Review">Pending Review</option>
                                 </select>
                             </div>
-                            
+
                             {/* Multiple Image Upload */}
                             <div className="mb-6">
                                 <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-1">
@@ -350,6 +372,7 @@ const AddProductView = ({ onViewChange }) => {
                                 type="number"
                                 name="rating"
                                 value={productData.rating}
+                                onChange={handleChange}
                                 isRequired={false}
                                 min="0"
                             />
@@ -359,6 +382,7 @@ const AddProductView = ({ onViewChange }) => {
                                 type="number"
                                 name="salesCount"
                                 value={productData.salesCount}
+                                onChange={handleChange}
                                 isRequired={false}
                                 min="0"
                             />
