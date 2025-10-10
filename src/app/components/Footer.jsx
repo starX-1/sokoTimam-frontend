@@ -53,7 +53,7 @@ const Footer = () => (
                     </a>
                 </div>
                 <p className="text-xs text-orange-200">
-                    © 2021 Copyright: sokoTimamim.com
+                    © 2025 Copyright: sokoTimamim.com
                 </p>
             </div>
 
