@@ -1,37 +1,85 @@
 'use client'
-import DealCard from './DealCard';
-import Products from '../api/products/api'
 import { useEffect, useState } from 'react';
+import DealCard from './DealCard';
+import Products from '../api/products/api';
 
 const DealsOfTheWeek = () => {
     const [deals, setDeals] = useState([]);
+    const [loading, setLoading] = useState(true);
+
     useEffect(() => {
         const fetchAllProducts = async () => {
-            const response = await Products.getProducts()
-            console.log("this is the response", response)
-            // setDeals(response)
-        }
-        fetchAllProducts()
-    }, [])
+            try {
+                const response = await Products.getProducts();
+                console.log("this is the response", response);
+                
+                // Get first 4 products
+                const firstFourProducts = response.products.slice(0, 4);
+                setDeals(firstFourProducts);
+                setLoading(false);
+            } catch (error) {
+                console.error("Error fetching products:", error);
+                setLoading(false);
+            }
+        };
+        fetchAllProducts();
+    }, []);
+
+    useEffect(() => {
+        // Only run this if deals have been fetched and don't already have images
+        if (deals.length === 0 || deals.some(p => p.images)) return;
+
+        const fetchProductImages = async () => {
+            const enrichedProducts = await Promise.all(
+                deals.map(async (product) => {
+                    const response = await Products.getProductWithImages(product.id);
+                    return {
+                        ...product,
+                        images: response.images,
+                    };
+                })
+            );
+            setDeals(enrichedProducts);
+        };
+
+        fetchProductImages();
+    }, [deals]);
+
+    console.log(deals);
+
     return (
         <section className="bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
                 <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-white p-4 bg-orange-950 rounded-xl shadow-lg">
                     🔥 Deals of the Week
                 </h2>
-                {/* Responsive Grid Setup: 2 cols on mobile, 3 on medium, 4 on large */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                    <DealCard title="African Bag" price="KSh 1500" imageUrl="https://ke.jumia.is/unsafe/fit-in/680x680/filters:fill(white)/product/01/6954523/1.jpg?0713" />
-                    <DealCard title="African Print" price="KSh 1500" imageUrl="https://ke.jumia.is/unsafe/fit-in/680x680/filters:fill(white)/product/61/159292/1.jpg?8733" />
-                    <DealCard title="Susu Bag" price="KSh 2500" imageUrl="https://ke.jumia.is/unsafe/fit-in/680x680/filters:fill(white)/product/41/159292/1.jpg?8728" />
-                    <DealCard title="African Print" price="KSh 1500" imageUrl="https://ke.jumia.is/unsafe/fit-in/680x680/filters:fill(white)/product/61/159292/1.jpg?8733" />
-                    {/* Added extra items for better visual representation of the responsive grid */}
-                    {/* <DealCard title="Handmade Basket" price="KSh 3200" imageUrl="https://ke.jumia.is/unsafe/fit-in/680x680/filters:fill(white)/product/95/437990/1.jpg" />
-                <DealCard title="Woven Mat" price="KSh 1200" imageUrl="https://ke.jumia.is/unsafe/fit-in/680x680/filters:fill(white)/product/21/536137/1.jpg" /> */}
-                </div>
+                
+                {loading ? (
+                    <div className="text-center py-8">
+                        <p className="text-gray-600">Loading deals...</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                        {deals.map((product) => {
+                            // Get the main image or fallback to first image
+                            const mainImage = product.images?.find(img => img.isMain)?.imageUrl 
+                                || product.images?.[0]?.imageUrl 
+                                || '';
+                            
+                            return (
+                                <DealCard 
+                                    key={product.id}
+                                    title={product.name}
+                                    price={`KSh ${parseFloat(product.price).toLocaleString()}`}
+                                    imageUrl={mainImage}
+                                />
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </section>
-    )
+    );
 };
 
 export default DealsOfTheWeek;

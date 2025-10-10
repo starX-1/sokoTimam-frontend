@@ -1,40 +1,51 @@
 'use client'
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
-
-
-
-const slides = [
-    {
-        title: "Fashion Deep U-neck",
-        desc1: "Sleeveless Solid Color Casual Women Maxi",
-        desc2: "Dress Summer Clothing Dresses",
-        desc3: "Women Lady Elegant",
-        price: "$4.88",
-        image: "https://ke.jumia.is/unsafe/fit-in/680x680/filters:fill(white)/product/61/159292/1.jpg?8733"
-    },
-    {
-        title: "Vintage Leather Wallet",
-        desc1: "Genuine Cowhide Multi-Card Zipper Pocket",
-        desc2: "Durable and Stylish Accessory",
-        desc3: "Perfect Gift for Him/Her",
-        price: "$19.99",
-        image: "https://ke.jumia.is/unsafe/fit-in/680x680/filters:fill(white)/product/61/159292/1.jpg?8733"
-
-    },
-    {
-        title: "Minimalist Smart Watch",
-        desc1: "Fitness Tracker with Heart Rate Monitor",
-        desc2: "IP68 Waterproof, Long Battery Life",
-        desc3: "Available in three colors",
-        price: "$49.00",
-        image: "https://ke.jumia.is/unsafe/fit-in/680x680/filters:fill(white)/product/61/159292/1.jpg?8733"
-
-    }
-];
+import Products from '../api/products/api';
 
 const ProductCarousel = () => {
+    const [slides, setSlides] = useState([]);
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchRandomProducts = async () => {
+            try {
+                const response = await Products.getProducts();
+                const allProducts = response.products;
+
+                // Shuffle and get 3 random products
+                const shuffled = [...allProducts].sort(() => Math.random() - 0.5);
+                const randomThree = shuffled.slice(0, 3);
+
+                // Fetch images for each product
+                const productsWithImages = await Promise.all(
+                    randomThree.map(async (product) => {
+                        const detailResponse = await Products.getProductWithImages(product.id);
+                        return {
+                            ...product,
+                            images: detailResponse.images,
+                        };
+                    })
+                );
+
+                setSlides(productsWithImages);
+                setLoading(false);
+            } catch (error) {
+                console.error("Error fetching products:", error);
+                setLoading(false);
+            }
+        };
+
+        fetchRandomProducts();
+    }, []); // Empty dependency - only runs once on mount
+
+    useEffect(() => {
+        if (slides.length === 0) return;
+
+        const interval = setInterval(goToNext, 5000);
+        return () => clearInterval(interval);
+    }, [slides.length, currentSlideIndex]);
 
     const goToPrevious = () => {
         setCurrentSlideIndex((prevIndex) =>
@@ -48,56 +59,89 @@ const ProductCarousel = () => {
         );
     };
 
-    // Auto slide effect (optional, commented out for manual control emphasis)
-    
-    useEffect(() => {
-        const interval = setInterval(goToNext, 5000); 
-        return () => clearInterval(interval);
-    }, []);
-    
+    if (loading) {
+        return (
+            <section className="relative max-w-5xl mx-auto my-8 overflow-hidden rounded-xl shadow-2xl bg-gray-100 min-h-[400px] flex items-center justify-center">
+                <p className="text-gray-600 text-lg">Loading featured products...</p>
+            </section>
+        );
+    }
 
-    const currentSlide = slides[currentSlideIndex];
+    if (slides.length === 0) {
+        return null;
+    }
 
     return (
         <section className="relative max-w-5xl mx-auto my-8 overflow-hidden rounded-xl shadow-2xl">
             <div className="flex transition-transform duration-500 ease-in-out"
                 style={{ transform: `translateX(-${currentSlideIndex * 100}%)` }}>
 
-                {slides.map((slide, index) => (
-                    <div key={index} className="flex-shrink-0 w-full">
-                        <div className="relative flex flex-col md:flex-row items-stretch min-h-[400px]">
+                {slides.map((slide, index) => {
+                    // Get main image
+                    const mainImage = slide.images?.find(img => img.isMain)?.imageUrl
+                        || slide.images?.[0]?.imageUrl
+                        || 'https://placehold.co/800x400/f0f0f0/333333?text=Product+Image';
 
-                            {/* Product Details (w-full on mobile, w-1/2 on md+) */}
-                            <div className="w-full md:w-1/2 p-6 sm:p-10 bg-gray-50 flex flex-col justify-center order-2 md:order-1">
-                                <span className="text-sm font-semibold text-orange-600 mb-2 uppercase tracking-widest">Featured Deal</span>
-                                <h3 className="text-2xl sm:text-3xl font-extrabold text-orange-950 mb-2">{slide.title}</h3>
-                                <p className="text-gray-600 mb-1">{slide.desc1}</p>
-                                <p className="text-gray-600 mb-1">{slide.desc2}</p>
-                                <p className="text-gray-600 mb-4">{slide.desc3}</p>
+                    // Format price
+                    const formattedPrice = `KSh ${parseFloat(slide.price).toLocaleString()}`;
 
-                                <div className="flex items-center space-x-6 mb-6">
-                                    <span className="text-3xl font-bold text-red-600">{slide.price}</span>
-                                    <button className="bg-orange-500 text-white px-8 py-3 rounded-full hover:bg-orange-600 transition font-semibold shadow-lg text-sm">
-                                        BUY NOW
-                                    </button>
+                    return (
+                        <div key={slide.id} className="flex-shrink-0 w-full">
+                            <div className="relative flex flex-col md:flex-row items-stretch min-h-[400px]">
+
+                                {/* Product Details */}
+                                <div className="w-full md:w-1/2 p-6 sm:p-10 bg-gray-50 flex flex-col justify-center order-2 md:order-1">
+                                    <span className="text-sm font-semibold text-orange-600 mb-2 uppercase tracking-widest">Featured Deal</span>
+                                    <h3 className="text-2xl sm:text-3xl font-extrabold text-orange-950 mb-2">{slide.name}</h3>
+
+                                    {slide.description && (
+                                        <p className="text-gray-600 mb-4">{slide.description}</p>
+                                    )}
+
+                                    {slide.stock > 0 ? (
+                                        <p className="text-sm text-green-600 font-semibold mb-2">
+                                            ✓ In Stock ({slide.stock} available)
+                                        </p>
+                                    ) : (
+                                        <p className="text-sm text-red-600 font-semibold mb-2">
+                                            Out of Stock
+                                        </p>
+                                    )}
+
+                                    <div className="flex items-center space-x-6 mb-6">
+                                        <span className="text-3xl font-bold text-red-600">{formattedPrice}</span>
+                                        <button
+                                            className={`px-8 py-3 rounded-full transition font-semibold shadow-lg text-sm ${slide.stock > 0
+                                                    ? 'bg-orange-500 text-white hover:bg-orange-600'
+                                                    : 'bg-gray-400 text-white cursor-not-allowed'
+                                                }`}
+                                            disabled={slide.stock === 0}
+                                        >
+                                            {slide.stock > 0 ? 'BUY NOW' : 'SOLD OUT'}
+                                        </button>
+                                    </div>
+
+                                    <p className="text-sm text-gray-700 border-t pt-4 mt-4">
+                                        <strong className="text-lg">Limited Time Offer</strong> - Don't miss out!
+                                    </p>
                                 </div>
-                                <p className="text-sm text-gray-700 border-t pt-4 mt-4">
-                                    <strong className="text-lg">2 Pieces (Min. Order)</strong> - Limited Stock!
-                                </p>
-                            </div>
 
-                            {/* Product Image (w-full on mobile, w-1/2 on md+) */}
-                            <div className="w-full md:w-1/2 h-64 md:h-auto order-1 md:order-2">
-                                <img
-                                    src={slide.image}
-                                    alt={slide.title}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/800x400/f0f0f0/333333?text=Product+Image"; }}
-                                />
+                                {/* Product Image */}
+                                <div className="w-full md:w-1/2 h-64 md:h-auto order-1 md:order-2">
+                                    <img
+                                        src={mainImage}
+                                        alt={slide.name}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = "https://placehold.co/800x400/f0f0f0/333333?text=Product+Image";
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Left Arrow */}
@@ -123,7 +167,10 @@ const ProductCarousel = () => {
                 {slides.map((_, index) => (
                     <button
                         key={index}
-                        className={`w-3 h-3 rounded-full transition-colors duration-300 ${currentSlideIndex === index ? 'bg-orange-600' : 'bg-orange-950 bg-opacity-50 hover:bg-opacity-80'}`}
+                        className={`w-3 h-3 rounded-full transition-colors duration-300 ${currentSlideIndex === index
+                                ? 'bg-orange-600'
+                                : 'bg-orange-950 bg-opacity-50 hover:bg-opacity-80'
+                            }`}
                         onClick={() => setCurrentSlideIndex(index)}
                         aria-label={`Go to slide ${index + 1}`}
                     />
@@ -132,6 +179,5 @@ const ProductCarousel = () => {
         </section>
     );
 };
-
 
 export default ProductCarousel;

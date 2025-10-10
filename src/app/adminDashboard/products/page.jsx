@@ -165,7 +165,7 @@ const ProductsView = () => {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shop / Category</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th> */}
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
@@ -177,7 +177,7 @@ const ProductsView = () => {
                         ) : (
                             products.map((product) => {
                                 // Capitalize the status for display (e.g., "active" -> "Active")
-                                const displayStatus = product.status.charAt(0).toUpperCase() + product.status.slice(1);
+                                // const displayStatus = product.status.charAt(0).toUpperCase() + product.status.slice(1);
                                 const stockCount = product.stock || 0; // Use 0 if stock is null/undefined
 
                                 return (
@@ -187,10 +187,10 @@ const ProductsView = () => {
                                                 <Box className="w-4 h-4 text-gray-500" />
                                                 <span className="font-semibold">{product.name}</span>
                                             </div>
-                                            <p className="text-xs text-gray-500 flex items-center mt-1">
+                                            {/* <p className="text-xs text-gray-500 flex items-center mt-1">
                                                 <Tag className="w-3 h-3 mr-1" />
                                                 SKU: {product.sku}
-                                            </p>
+                                            </p> */}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                             {/* Using shopId as a placeholder for the shop name */}
@@ -209,11 +209,11 @@ const ProductsView = () => {
                                                 {stockCount}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        {/* <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusStyles(product.status)}`}>
                                                 {displayStatus}
                                             </span>
-                                        </td>
+                                        </td> */}
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <a href="#" className="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
                                             <a href="#" className="text-red-600 hover:text-red-900">Archive</a>

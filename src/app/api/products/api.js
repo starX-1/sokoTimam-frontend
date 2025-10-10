@@ -38,6 +38,14 @@ class Products {
             console.log(error)
         }
     }
+    async getProductWithImages(id){
+        try {
+            const response = await instance.get(`/product-with-images/${id}`)
+            return response.data.data
+        } catch (error) {
+            console.error(error)
+        }
+    }
 
 }
 
