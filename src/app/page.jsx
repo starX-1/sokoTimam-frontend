@@ -8,7 +8,6 @@ import ProductCarousel from './components/ProductSlide';
 import NewAndPopular from '@/app/components/NewPopular'
 import Footer from '@/app/components/Footer'
 
-
 const FeaturedProduct = () => (
   <section className="bg-white">
     <div className="max-w-7xl mx-auto relative overflow-hidden">
@@ -35,24 +34,6 @@ const FeaturedProduct = () => (
       </div>
     </div>
   </section>
-);
-
-const ProductCard = ({ title, originalPrice, salePrice, discount, imageUrl }) => (
-  <div className="w-full border border-gray-200 shadow-sm hover:shadow-lg transition duration-300">
-    <div className="relative h-64 overflow-hidden">
-      <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
-      {discount && (
-        <div className="absolute top-0 left-0 bg-red-600 text-white text-xs font-bold p-2">
-          {discount} OFF
-        </div>
-      )}
-    </div>
-    <div className="p-3 text-center">
-      <p className="font-semibold text-gray-800 mb-1">{title}</p>
-      <p className="text-gray-500 line-through text-sm">KSh {originalPrice}</p>
-      <p className="text-lg font-bold text-red-600">KSh {salePrice}</p>
-    </div>
-  </div>
 );
 
 // const NewAndPopular = () => (

@@ -589,7 +589,7 @@ const ShopsView = () => {
                             <tr key={shop.id} className="hover:bg-gray-50 transition duration-150">
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     <div className="flex items-center space-x-2">
-                                        <Store className="w-4 h-4 text-gray-500" />
+                                        <img src={shop.logoUrl} alt="Shop Logo" className="w-8 h-8 rounded-full" />
                                         <span>{shop.name}</span>
                                     </div>
                                     {shop.location && (
