@@ -231,7 +231,7 @@ const LoginPage = ({ onViewChange }) => {
 
                 {/* Footer Copyright */}
                 <div className="text-center py-4 text-xs text-gray-500 bg-white">
-                    &copy; 2021 Copyright. sokotimam.com
+                    &copy; 2025 Copyright. sokotimam.com
                 </div>
             </div>
         </div>
