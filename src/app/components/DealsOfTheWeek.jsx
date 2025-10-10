@@ -2,17 +2,23 @@
 import { useEffect, useState } from 'react';
 import DealCard from './DealCard';
 import Products from '../api/products/api';
+import { useRouter } from 'next/navigation';
 
 const DealsOfTheWeek = () => {
     const [deals, setDeals] = useState([]);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
+
+    const handleProductClick = (productId) => {
+        router.push(`/Customer/product/${productId}`);
+    };
 
     useEffect(() => {
         const fetchAllProducts = async () => {
             try {
                 const response = await Products.getProducts();
                 console.log("this is the response", response);
-                
+
                 // Get first 4 products
                 const firstFourProducts = response.products.slice(0, 4);
                 setDeals(firstFourProducts);
@@ -53,26 +59,38 @@ const DealsOfTheWeek = () => {
                 <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-white p-4 bg-orange-950 rounded-xl shadow-lg">
                     🔥 Deals of the Week
                 </h2>
-                
+
                 {loading ? (
                     <div className="text-center py-8">
                         <p className="text-gray-600">Loading deals...</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                    <div
+                        // onClick={() => handleProductClick(product.id)}
+                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                         {deals.map((product) => {
                             // Get the main image or fallback to first image
-                            const mainImage = product.images?.find(img => img.isMain)?.imageUrl 
-                                || product.images?.[0]?.imageUrl 
+                            const mainImage = product.images?.find(img => img.isMain)?.imageUrl
+                                || product.images?.[0]?.imageUrl
                                 || '';
-                            
+
                             return (
-                                <DealCard 
+                                <div
                                     key={product.id}
-                                    title={product.name}
-                                    price={`KSh ${parseFloat(product.price).toLocaleString()}`}
-                                    imageUrl={mainImage}
-                                />
+                                    onClick={() => handleProductClick(product.id)}
+                                >
+                                    {
+                                        mainImage && (
+
+                                            <DealCard
+                                                key={product.id}
+                                                title={product.name}
+                                                price={`KSh ${parseFloat(product.price).toLocaleString()}`}
+                                                imageUrl={mainImage}
+                                            />
+                                        )}
+
+                                </div>
                             );
                         })}
                     </div>

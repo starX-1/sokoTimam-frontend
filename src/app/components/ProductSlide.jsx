@@ -2,9 +2,11 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import Products from '../api/products/api';
+import { useRouter } from "next/navigation";
 
 const ProductCarousel = () => {
     const [slides, setSlides] = useState([]);
+    const router = useRouter();
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
     const [loading, setLoading] = useState(true);
 
@@ -71,6 +73,11 @@ const ProductCarousel = () => {
         return null;
     }
 
+
+    const handleProductClick = (productId) => {
+        router.push(`/Customer/product/${productId}`);
+    };
+
     return (
         <section className="relative max-w-5xl mx-auto my-8 overflow-hidden rounded-xl shadow-2xl">
             <div className="flex transition-transform duration-500 ease-in-out"
@@ -111,6 +118,7 @@ const ProductCarousel = () => {
                                     <div className="flex items-center space-x-6 mb-6">
                                         <span className="text-3xl font-bold text-red-600">{formattedPrice}</span>
                                         <button
+                                            onClick={() => handleProductClick(slide.id)}
                                             className={`px-8 py-3 rounded-full transition font-semibold shadow-lg text-sm ${slide.stock > 0
                                                     ? 'bg-orange-500 text-white hover:bg-orange-600'
                                                     : 'bg-gray-400 text-white cursor-not-allowed'
@@ -119,6 +127,7 @@ const ProductCarousel = () => {
                                         >
                                             {slide.stock > 0 ? 'BUY NOW' : 'SOLD OUT'}
                                         </button>
+
                                     </div>
 
                                     <p className="text-sm text-gray-700 border-t pt-4 mt-4">
@@ -168,8 +177,8 @@ const ProductCarousel = () => {
                     <button
                         key={index}
                         className={`w-3 h-3 rounded-full transition-colors duration-300 ${currentSlideIndex === index
-                                ? 'bg-orange-600'
-                                : 'bg-orange-950 bg-opacity-50 hover:bg-opacity-80'
+                            ? 'bg-orange-600'
+                            : 'bg-orange-950 bg-opacity-50 hover:bg-opacity-80'
                             }`}
                         onClick={() => setCurrentSlideIndex(index)}
                         aria-label={`Go to slide ${index + 1}`}

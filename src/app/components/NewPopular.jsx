@@ -3,8 +3,10 @@ import { useRef, useEffect, useState } from "react";
 import ProductCard from './ProductCard';
 import Products from '../api/products/api';
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const NewAndPopular = () => {
+    const router = useRouter();
     const carouselRef = useRef(null);
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -38,6 +40,11 @@ const NewAndPopular = () => {
 
         fetchProducts();
     }, []);
+
+
+        const handleProductClick = (productId) => {
+        router.push(`/Customer/product/${productId}`);
+    };
 
     const scroll = (direction) => {
         if (carouselRef.current) {
@@ -100,6 +107,7 @@ const NewAndPopular = () => {
                                             salePrice={salePrice.toLocaleString()}
                                             discount={`${discountPercent}%`}
                                             imageUrl={mainImage}
+                                            product={product}
                                         />
                                     </div>
                                 );
