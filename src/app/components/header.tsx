@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingCart, LogIn, Menu, Search, X, ChevronDown, ChevronUp, User } from 'lucide-react';
 import Link from 'next/link';
 import { getSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 interface User {
     accessToken: string,
     email: string,
@@ -14,6 +15,7 @@ interface User {
     sub: number
 }
 const Header = () => {
+    const router = useRouter();
     // State for the main mobile menu (hamburger menu)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     // New state for the desktop/tablet Categories dropdown
@@ -58,6 +60,9 @@ const Header = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, [isMobileMenuOpen]);
 
+    const handleSellerOnboarding = () => {
+        router.push('/sellerOnboarding')
+    }
 
     return (
         <header className="bg-white border-b sticky top-0 z-30 shadow-md">
@@ -130,13 +135,16 @@ const Header = () => {
 
 
                     {/* Utility Buttons (Visible on Larger Screens) */}
-                    <span className="hidden lg:inline text-gray-300">|</span>
-                    <div className="hidden lg:flex space-x-2 text-xs">
-                        <button className="text-orange-600 border border-orange-600 px-3 py-1.5 rounded-full hover:bg-orange-50 transition duration-150 shadow-sm font-semibold">
-                            Get the App
+                    {/* Utility Buttons (Visible on Medium+ Screens) */}
+                    <span className="hidden md:inline text-gray-300">|</span>
+                    <div className="hidden md:flex space-x-2 text-xs">
+                        <button 
+                        onClick={handleSellerOnboarding}
+                        className="text-orange-600 border border-orange-600 px-2 md:px-3 py-1.5 rounded-full hover:bg-orange-50 transition duration-150 shadow-sm font-semibold">
+                            Seller Center
                         </button>
                         {logedInUser && (
-                            <button className="text-gray-700 border border-gray-300 px-3 py-1.5 rounded-full hover:bg-gray-50 transition duration-150 shadow-sm font-semibold">
+                            <button className="text-gray-700 border border-gray-300 px-2 md:px-3 py-1.5 rounded-full hover:bg-gray-50 transition duration-150 shadow-sm font-semibold">
                                 Ship To {logedInUser?.firstname}
                             </button>
                         )}
@@ -231,11 +239,11 @@ const Header = () => {
                             <a href="#" className="block py-1 text-gray-700 hover:text-orange-600 transition">
                                 New Arrivals
                             </a>
-                            <a href="#" className="block py-1 text-gray-700 hover:text-orange-600 transition">
-                                Get the App
+                            <a href="/sellerOnboarding" className="block py-1 text-gray-700 hover:text-orange-600 transition">
+                                Seller Center
                             </a>
                             <a href="#" className="block py-1 text-gray-700 hover:text-orange-600 transition">
-                                Ship To [Address]
+                                Ship To {logedInUser?.firstname}
                             </a>
                         </div>
                     </div>
