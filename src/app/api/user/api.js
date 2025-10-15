@@ -42,6 +42,14 @@ class Users {
             return null
         }
     }
+    async getUserByEmail(email) {
+        try {
+            const response = await instance.get(`/user/email/${email}`)
+            return response.data
+        } catch (error) {
+            return null
+        }
+    }
 }
 
 export default new Users();

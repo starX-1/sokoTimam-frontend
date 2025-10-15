@@ -1,9 +1,16 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChevronRight, ChevronLeft, Store, User, FileText, CreditCard, CheckCircle, AlertCircle } from 'lucide-react';
+import Users from '../api/user/api'
+import auth from '../api/authenticate'
+import sellers from '../api/seller/api'
+import Shops from '../api/shop/api'
+import { toast } from 'react-toastify';
+
 
 const SellerOnboarding = () => {
     const [currentStep, setCurrentStep] = useState(1);
+    const [disabled, setDisabled] = useState(false);
     const [formData, setFormData] = useState({
         // Personal Information
         businessOwnerName: '',
@@ -40,6 +47,7 @@ const SellerOnboarding = () => {
 
     const [errors, setErrors] = useState({});
     const [logoPreview, setLogoPreview] = useState(null);
+    const [newUserPassword, setNewUserPassword] = useState('');
 
     const steps = [
         { number: 1, title: 'Personal Info', icon: User },
@@ -146,12 +154,111 @@ const SellerOnboarding = () => {
         setCurrentStep(prev => Math.max(prev - 1, 1));
     };
 
-    const handleSubmit = () => {
-        if (validateStep(4)) {
-            console.log('Form submitted:', formData);
-            setCurrentStep(5); // Success screen
+    // using useeffect fetch user details from api using the keyed in email 
+    useEffect(() => {
+        const fetchUserDetails = async () => {
+            try {
+                const response = await Users.getUserByEmail(formData.email);
+                const user = response?.user;
+                if (user) {
+                    setDisabled(true)
+                    setFormData({
+                        ...formData,
+                        businessOwnerName: user.firstname + " " + user.lastname,
+                        email: user.email,
+                        phone: user.phone,
+                        userId: user.id,
+                        // nationalId: user.nationalId,
+                    })
+                }
+
+                // setUserData(user);
+            } catch (error) {
+                console.error('Error fetching user details:', error);
+            }
+        };
+
+        if (formData.email) {
+            fetchUserDetails();
+        }
+    }, [formData.email]);
+
+
+    const handleSubmit = async () => {
+        if (!validateStep(4)) return;
+
+        try {
+            // toast.info("Submitting your details...");
+
+            let userId = formData.userId;
+
+            // Step 1: Register user if not already registered
+            if (!disabled) {
+                const randomPassword = Math.random().toString(36).slice(-8);
+                const [firstName, lastName = ""] = formData.businessOwnerName.split(" ");
+                setNewUserPassword(randomPassword);
+                const registrationData = {
+                    firstname: firstName,
+                    lastname: lastName,
+                    email: formData.email,
+                    phone: formData.phone,
+                    password: randomPassword,
+                };
+
+                const regResponse = await auth.register(registrationData);
+                userId = regResponse.user.id;
+                setFormData((prev) => ({ ...prev, userId }));
+
+                toast.success("User registered successfully!");
+            }
+
+            // Step 2: Create seller
+            const sellerData = {
+                userId,
+                nationalId: formData.nationalId,
+            };
+
+            const sellerResponse = await sellers.createSeller(sellerData);
+
+            // Step 3: Create shop
+            const shopData = {
+                sellerId: sellerResponse.id,
+                name: formData.storeName,
+                description: formData.storeDescription,
+                primaryCategory: formData.storeCategory,
+                businessType: formData.businessType,
+                address: formData.businessAddress,
+                city: formData.city,
+                kraPin: formData.kraPin,
+                businessRegistrationNumber: formData.businessRegistration,
+                taxId: formData.taxId,
+                expectedMonthlyOrders: formData.expectedMonthlyOrders,
+                logo: formData.storeLogo,
+            };
+
+            const shopResponse = await Shops.createShop(shopData);
+            const shopId = shopResponse?.shop.id;
+            setFormData((prev) => ({ ...prev, shopId }));
+
+            // Step 4: Create bank account details
+            const bankData = {
+                shopId,
+                bankName: formData.bankName,
+                accountNumber: formData.accountNumber,
+                accountName: formData.accountName,
+                branchCode: formData.branchCode,
+            };
+
+            await Shops.createBankAccount(bankData);
+
+            toast.success("Business registration completed successfully!");
+            setCurrentStep(5);
+        } catch (error) {
+            console.error("Submission error:", error);
+            toast.error("Something went wrong. Please try again.");
         }
     };
+
 
     const renderStepContent = () => {
         switch (currentStep) {
@@ -159,19 +266,6 @@ const SellerOnboarding = () => {
                 return (
                     <div className="space-y-4">
                         <h2 className="text-2xl font-bold text-gray-800 mb-6">Personal Information</h2>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                            <input
-                                type="text"
-                                name="businessOwnerName"
-                                value={formData.businessOwnerName}
-                                onChange={handleInputChange}
-                                className={`w-full border ${errors.businessOwnerName ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 focus:outline-none text-gray-700 focus:ring-orange-500 focus:border-transparent`}
-                                placeholder="Enter your full name"
-                            />
-                            {errors.businessOwnerName && <p className="text-red-500 text-sm mt-1">{errors.businessOwnerName}</p>}
-                        </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
@@ -182,9 +276,25 @@ const SellerOnboarding = () => {
                                 onChange={handleInputChange}
                                 className={`w-full border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 focus:outline-none text-gray-700 focus:ring-orange-500 focus:border-transparent`}
                                 placeholder="your@email.com"
+                                disabled={disabled}
                             />
                             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                         </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                            <input
+                                type="text"
+                                name="businessOwnerName"
+                                value={formData.businessOwnerName}
+                                onChange={handleInputChange}
+                                className={`w-full border ${errors.businessOwnerName ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 focus:outline-none text-gray-700 focus:ring-orange-500 focus:border-transparent`}
+                                placeholder="Enter your full name"
+                                disabled={disabled}
+                            />
+                            {errors.businessOwnerName && <p className="text-red-500 text-sm mt-1">{errors.businessOwnerName}</p>}
+                        </div>
+
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
@@ -195,6 +305,7 @@ const SellerOnboarding = () => {
                                 onChange={handleInputChange}
                                 className={`w-full border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 focus:outline-none text-gray-700 focus:ring-orange-500 focus:border-transparent`}
                                 placeholder="+254 700 000 000"
+                                disabled={disabled}
                             />
                             {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                         </div>
@@ -296,7 +407,7 @@ const SellerOnboarding = () => {
                             <p className="text-xs text-gray-500 mt-2">Recommended: Square image, min 200x200px</p>
                         </div>
 
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Product Categories (Select all that apply)</label>
                             <div className="grid grid-cols-2 gap-2">
                                 {categories.map(cat => (
@@ -311,7 +422,7 @@ const SellerOnboarding = () => {
                                     </label>
                                 ))}
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 );
 
@@ -370,7 +481,7 @@ const SellerOnboarding = () => {
                             {errors.businessAddress && <p className="text-red-500 text-sm mt-1">{errors.businessAddress}</p>}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
                                 <input
@@ -384,7 +495,7 @@ const SellerOnboarding = () => {
                                 {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
                             </div>
 
-                            <div>
+                            {/* <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
                                 <input
                                     type="text"
@@ -394,7 +505,7 @@ const SellerOnboarding = () => {
                                     className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none text-gray-700 focus:ring-orange-500 focus:border-transparent"
                                     placeholder="00100"
                                 />
-                            </div>
+                            </div> */}
                         </div>
 
                         <div>
@@ -515,6 +626,12 @@ const SellerOnboarding = () => {
                         <p className="text-gray-600 mb-6 max-w-md mx-auto">
                             Thank you for registering as a seller on Soko. We're reviewing your application and will notify you via email within 1-2 business days.
                         </p>
+                        {!disabled && (
+                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 max-w-md mx-auto mb-8">
+                                <h3 className="font-semibold text-red-600 mb-3">This is your password, please copy it as it won't be shown again</h3>
+                                <p className="text-left text-sm text-gray-700">{newUserPassword}</p>
+                            </div>
+                        )}
                         <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 max-w-md mx-auto mb-8">
                             <h3 className="font-semibold text-gray-800 mb-3">Next Steps:</h3>
                             <ul className="text-left text-sm text-gray-700 space-y-2">
@@ -563,8 +680,8 @@ const SellerOnboarding = () => {
                                 <React.Fragment key={step.number}>
                                     <div className="flex flex-col items-center flex-1">
                                         <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition ${currentStep >= step.number
-                                                ? 'bg-orange-600 text-white'
-                                                : 'bg-gray-200 text-gray-500'
+                                            ? 'bg-orange-600 text-white'
+                                            : 'bg-gray-200 text-gray-500'
                                             }`}>
                                             <StepIcon className="w-6 h-6" />
                                         </div>
@@ -593,8 +710,8 @@ const SellerOnboarding = () => {
                             onClick={handlePrevious}
                             disabled={currentStep === 1}
                             className={`flex items-center space-x-2 px-6 py-3 rounded-lg transition ${currentStep === 1
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                 }`}
                         >
                             <ChevronLeft className="w-5 h-5" />
