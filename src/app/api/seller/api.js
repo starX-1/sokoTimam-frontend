@@ -18,7 +18,7 @@ class sellers{
         return response.data
     }
     async createSeller(data){
-        const response = await instance.post('/seller',data)
+        const response = await instance.post('/seller/register',data)
         return response.data
     }
 }

@@ -6,6 +6,7 @@ import auth from '../api/authenticate'
 import sellers from '../api/seller/api'
 import Shops from '../api/shop/api'
 import { toast } from 'react-toastify';
+import Accounts from '../api/bank/api'
 
 
 const SellerOnboarding = () => {
@@ -222,7 +223,7 @@ const SellerOnboarding = () => {
 
             // Step 3: Create shop
             const shopData = {
-                sellerId: sellerResponse.id,
+                sellerId: sellerResponse.data.id,
                 name: formData.storeName,
                 description: formData.storeDescription,
                 primaryCategory: formData.storeCategory,
@@ -232,7 +233,7 @@ const SellerOnboarding = () => {
                 kraPin: formData.kraPin,
                 businessRegistrationNumber: formData.businessRegistration,
                 taxId: formData.taxId,
-                expectedMonthlyOrders: formData.expectedMonthlyOrders,
+                expectedMonthlyOrders: parseInt(formData.expectedMonthlyOrders),
                 logo: formData.storeLogo,
             };
 
@@ -242,14 +243,14 @@ const SellerOnboarding = () => {
 
             // Step 4: Create bank account details
             const bankData = {
-                shopId,
+                sellerId:sellerResponse.data.id,
                 bankName: formData.bankName,
                 accountNumber: formData.accountNumber,
                 accountName: formData.accountName,
                 branchCode: formData.branchCode,
             };
 
-            await Shops.createBankAccount(bankData);
+            await Accounts.createAccount(bankData);
 
             toast.success("Business registration completed successfully!");
             setCurrentStep(5);
@@ -517,10 +518,10 @@ const SellerOnboarding = () => {
                                 className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none text-gray-700 focus:ring-orange-500 focus:border-transparent"
                             >
                                 <option value="">Select range</option>
-                                <option value="0-50">0-50 orders</option>
-                                <option value="51-200">51-200 orders</option>
-                                <option value="201-500">201-500 orders</option>
-                                <option value="500+">500+ orders</option>
+                                <option value="50">0-50 orders</option>
+                                <option value="200">51-200 orders</option>
+                                <option value="500">201-500 orders</option>
+                                <option value="1000">500+ orders</option>
                             </select>
                         </div>
                     </div>
@@ -629,7 +630,7 @@ const SellerOnboarding = () => {
                         {!disabled && (
                             <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 max-w-md mx-auto mb-8">
                                 <h3 className="font-semibold text-red-600 mb-3">This is your password, please copy it as it won't be shown again</h3>
-                                <p className="text-left text-sm text-gray-700">{newUserPassword}</p>
+                                <p className="text-center text-sm text-gray-700">{newUserPassword}</p>
                             </div>
                         )}
                         <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 max-w-md mx-auto mb-8">
