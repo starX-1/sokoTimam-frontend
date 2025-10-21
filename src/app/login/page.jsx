@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import auth from '../api/authenticate'
 import { getSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import sellers from '../api/seller/api'
 // --- Decorative Pattern Divider ---
 // Using an inline SVG for a crisp, repeatable geometric pattern look, 
 // mimicking the design in the uploaded image's border.
@@ -128,6 +129,11 @@ const LoginPage = ({ onViewChange }) => {
                     router.push("/");
                 }
                 if (session?.user?.role === "seller") {
+                    // get seller details  and store them in session storage
+                    const sellerData = await sellers.getSellerByUserId(session.user.id);
+                    // console.log("Seller Data:", sellerData);
+                    sessionStorage.setItem("sellerData", JSON.stringify(sellerData.data));
+                    // router.push("/sellerDashboard");
                     router.push("/sellerDashboard");
                 }
                 setLoading(false);

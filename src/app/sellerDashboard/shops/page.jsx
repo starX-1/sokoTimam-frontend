@@ -448,12 +448,16 @@ const ShopsView = () => {
     const [selectedShop, setSelectedShop] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All Statuses');
+    const [seller, setSeller] = useState(null);
 
     useEffect(() => {
         const fetchShops = async () => {
             try {
                 const sellerSession = await getSession();
-                const res = await sellers.getAllMyShops(sellerSession.user.id, sellerSession.user.accessToken);
+                // get sellerData from session storage
+                const sellerData = JSON.parse(sessionStorage.getItem('sellerData'));
+                setSeller(sellerData);
+                const res = await sellers.getAllMyShops(sellerData.id, sellerSession.user.accessToken);
                 // const res = await Shops.getAllShops(sellerSession.user.accessToken);
                 console.log(res);
                 setShops(res.shops);
@@ -537,6 +541,8 @@ const ShopsView = () => {
         return matchesSearch && matchesStatus;
     });
 
+    // console.log(seller)
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
@@ -602,7 +608,7 @@ const ShopsView = () => {
                                     )}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {shop?.owner?.firstname} {shop?.owner?.lastname}
+                                    {seller.fullname}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{shop?.products?.length || 0}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">

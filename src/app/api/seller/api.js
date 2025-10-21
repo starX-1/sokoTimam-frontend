@@ -41,6 +41,10 @@ class sellers {
         return response.data;
 
     }
+    async getSellerByUserId(id){
+        const response = await instance.get(`/seller/user/${id}`)
+        return response.data
+    }
 }
 
 export default new sellers();
