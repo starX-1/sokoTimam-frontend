@@ -127,7 +127,7 @@ const LoginPage = ({ onViewChange }) => {
                 if (session?.user?.role === "customer") {
                     router.push("/");
                 }
-                if (session?.user?.role === "vendor") {
+                if (session?.user?.role === "seller") {
                     router.push("/sellerDashboard");
                 }
                 setLoading(false);
@@ -294,10 +294,12 @@ const SignUpPage = ({ onViewChange }) => {
         try {
             const res = await auth.register(signupData);
             console.log(res);
-            if (res.message === "User created successfully. Please check your email for the verification code.") {
+            if (res.message === "User created successfully.") {
                 toast.success(res.message);
                 // onViewChange('login');
-                router.push('/verifyEmail');
+                // reload the page 
+                window.location.reload();
+                // router.push('/login');
                 setLoading(false);
             }
         } catch (error) {

@@ -7,9 +7,11 @@ import sellers from '../api/seller/api'
 import Shops from '../api/shop/api'
 import { toast } from 'react-toastify';
 import Accounts from '../api/bank/api'
+import { useRouter } from 'next/navigation';
 
 
 const SellerOnboarding = () => {
+    const router = useRouter();
     const [currentStep, setCurrentStep] = useState(1);
     const [disabled, setDisabled] = useState(false);
     const [formData, setFormData] = useState({
@@ -642,8 +644,8 @@ const SellerOnboarding = () => {
                                 <li>✓ Review seller guidelines</li>
                             </ul>
                         </div>
-                        <button className="bg-orange-600 text-white px-8 py-3 rounded-lg hover:bg-orange-700 transition font-semibold">
-                            Go to Dashboard
+                        <button onClick={() => router.push('/')} className="bg-orange-600 text-white px-8 py-3 rounded-lg hover:bg-orange-700 transition font-semibold">
+                            Home
                         </button>
                     </div>
                 );

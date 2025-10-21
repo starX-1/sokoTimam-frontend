@@ -1,0 +1,403 @@
+'use client'
+import { AlignLeft, Image, Mail, MapPin, Phone, Store, User, Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import Users from '../../../api/user/api'
+import { getSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+
+import Shops from '../../../api/shop/api'
+import { toast } from "react-toastify";
+
+const InputGroup = ({
+    label,
+    icon: Icon,
+    disabled,
+    type = "text",
+    name,
+    placeholder,
+    isRequired = true,
+    value,
+    onChange,
+}) => {
+    const inputProps = {
+        id: name,
+        name,
+        placeholder,
+        required: isRequired,
+        disabled,
+        onChange,
+        className: `w-full py-3 pl-10 pr-4 border border-orange-200 rounded-xl shadow-inner 
+    focus:outline-none focus:ring-orange-500 focus:border-orange-500 transition duration-150 text-gray-800 
+    ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`,
+    };
+
+    // ❌ Don't bind value for file input
+    if (type !== "file") {
+        inputProps.value = value;
+    }
+
+    return (
+        <div className="mb-6">
+            <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+                {label}
+            </label>
+            <div className="relative">
+                <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input type={type} {...inputProps} />
+            </div>
+        </div>
+    );
+};
+
+
+const AddShopView = () => {
+    const router = useRouter();
+    const [shopData, setShopData] = useState({
+        ownerId: '',
+        name: "",
+        description: "",
+        logoUrl: null,  // Changed to null for file
+        coverUrl: null, // Changed to null for file
+        status: "Active",
+        location: '',
+        ownerName: '',
+        ownerEmail: '',
+        ownerPhone: '',
+        verified: false,
+    });
+
+    const [userOptions, setUserOptions] = useState([]);
+    const [admin, setAdmin] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [filteredUsers, setFilteredUsers] = useState([]);
+
+    useEffect(() => {
+        const loadData = async () => {
+            const adminSession = await getSession();
+            setAdmin(adminSession);
+            const response = await Users.getAll(adminSession);
+            setUserOptions(response?.users || []);
+        };
+        loadData();
+    }, []);
+
+    // Filter users based on search term
+    useEffect(() => {
+        if (searchTerm.trim() === '') {
+            setFilteredUsers([]);
+            return;
+        }
+
+        const filtered = userOptions.filter(user =>
+            user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            `${user.firstname} ${user.lastname}`.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredUsers(filtered);
+    }, [searchTerm, userOptions]);
+
+    const handleChange = (e) => {
+        const target = e.target;
+        const { name, type, checked } = target;
+
+        if (type === 'file') {
+            const file = target.files && target.files[0];
+            if (file) {
+                console.log(`✅ Selected ${name}:`, file);
+                setShopData(prev => ({ ...prev, [name]: file }));
+            } else {
+                console.warn(`⚠️ No file selected for ${name}   `);
+            }
+        } else if (type === 'checkbox') {
+            setShopData(prev => ({ ...prev, [name]: checked }));
+        } else {
+            setShopData(prev => ({ ...prev, [name]: target.value }));
+        }
+    };
+
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setShowDropdown(true);
+    };
+
+    const handleUserSelect = (user) => {
+        setShopData(prev => ({
+            ...prev,
+            ownerId: user.id.toString(),
+            ownerEmail: user.email,
+            ownerName: `${user.firstname} ${user.lastname}`,
+            ownerPhone: user.phone || ''
+        }));
+        setSearchTerm(user.email);
+        setShowDropdown(false);
+    };
+
+    // function to validate the shops data required 
+    const validateInputs = () => {
+        const { ownerId, name, description, location, logoUrl, coverUrl } = shopData;
+        if (!ownerId || !name || !description || !location) {
+            toast.error('Please fill in all required fields.');
+            return false;
+        }
+        if (!logoUrl || !coverUrl) {
+            toast.error('Please upload both logo and cover images.');
+            return false;
+        }
+        return true;
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!validateInputs()) return;
+
+        try {
+            const formData = new FormData();
+            formData.append("ownerId", shopData.ownerId);
+            formData.append("name", shopData.name);
+            formData.append("description", shopData.description);
+            formData.append("location", shopData.location);
+            formData.append("status", shopData.status);
+            formData.append("verified", shopData.verified);
+            formData.append("ownerName", shopData.ownerName);
+            formData.append("ownerEmail", shopData.ownerEmail);
+            formData.append("ownerPhone", shopData.ownerPhone);
+
+            // Append the files - FIXED: Now appending the actual File objects
+            if (shopData.logoUrl instanceof File) {
+                formData.append("logo", shopData.logoUrl);
+                console.log("Logo file appended:", shopData.logoUrl.name);
+            }
+            if (shopData.coverUrl instanceof File) {
+                formData.append("cover", shopData.coverUrl);
+                console.log("Cover file appended:", shopData.coverUrl.name);
+            }
+
+            // Debug: Log FormData contents
+            console.log("FormData contents:");
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value instanceof File ? `File: ${value.name}` : value);
+            }
+
+            const res = await Shops.createShop(formData, admin.user.accessToken);
+            console.log("Response:", res);
+
+            if (res) {
+                toast.success("Shop created successfully!");
+                router.push('/adminDashboard/shops');
+            }
+
+        } catch (error) {
+            console.error("Error submitting shop:", error);
+            toast.error("Failed to create shop. Please try again.");
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                <h2 className="text-3xl font-bold text-gray-800">Add New Shop</h2>
+                <a
+                    href="#/shops"
+                    onClick={() => router.push('/adminDashboard/shops')}
+                    className="mt-4 sm:mt-0 text-gray-600 hover:text-orange-600 transition text-sm font-medium"
+                >
+                    ← Back to Shops List
+                </a>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
+                <form onSubmit={handleSubmit} className="space-y-6">
+
+                    {/* Shop Information Section */}
+                    <h3 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">
+                        Shop Details {shopData.ownerId && `(Owner ID: ${shopData.ownerId})`}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <InputGroup
+                            label="Shop Name"
+                            icon={Store}
+                            name="name"
+                            onChange={handleChange}
+                            placeholder="e.g., Kilimanjaro Crafts"
+                            value={shopData.name}
+                        />
+                        <InputGroup
+                            label="Physical Location"
+                            icon={MapPin}
+                            name="location"
+                            onChange={handleChange}
+                            placeholder="e.g., Nairobi CBD"
+                            value={shopData.location}
+                        />
+                        <InputGroup
+                            label="Logo Image"
+                            icon={Image}
+                            type="file"
+                            onChange={handleChange}
+                            name="logoUrl"
+                            isRequired={true}
+                        />
+                        <InputGroup
+                            label="Cover Image"
+                            icon={Image}
+                            type="file"
+                            name="coverUrl"
+                            onChange={handleChange}
+                            isRequired={true}
+                        />
+                    </div>
+
+                    {/* Show selected file names */}
+                    {(shopData.logoUrl || shopData.coverUrl) && (
+                        <div className="text-sm text-gray-600 space-y-1">
+                            {shopData.logoUrl && (
+                                <div>✓ Logo: {shopData.logoUrl.name}</div>
+                            )}
+                            {shopData.coverUrl && (
+                                <div>✓ Cover: {shopData.coverUrl.name}</div>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="mb-6">
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Shop Description</label>
+                        <div className="relative">
+                            <AlignLeft className="absolute left-3 top-4 w-5 h-5 text-gray-400" />
+                            <textarea
+                                id="description"
+                                name="description"
+                                rows="4"
+                                placeholder="Provide a brief description of the shop and its products..."
+                                required
+                                value={shopData.description}
+                                onChange={handleChange}
+                                className="w-full py-3 pl-10 pr-4 border border-orange-200 rounded-xl shadow-inner focus:outline-none focus:ring-orange-500 focus:border-orange-500 transition duration-150 text-gray-800"
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    {/* Owner Contact Section with Search */}
+                    <h3 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4 pt-6">Owner Contact (Search by email or name)</h3>
+
+                    {/* User Search Field */}
+                    <div className="mb-6 relative">
+                        <label htmlFor="userSearch" className="block text-sm font-medium text-gray-700 mb-1">Search User</label>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input
+                                type="text"
+                                id="userSearch"
+                                placeholder="Search by email or name..."
+                                value={searchTerm}
+                                onChange={handleSearchChange}
+                                onFocus={() => setShowDropdown(true)}
+                                className="w-full py-3 pl-10 pr-4 border border-orange-200 rounded-xl shadow-inner focus:outline-none focus:ring-orange-500 focus:border-orange-500 transition duration-150 text-gray-800"
+                            />
+                        </div>
+
+                        {/* Dropdown */}
+                        {showDropdown && filteredUsers.length > 0 && (
+                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                                {filteredUsers.map(user => (
+                                    <div
+                                        key={user.id}
+                                        onClick={() => handleUserSelect(user)}
+                                        className="px-4 py-3 hover:bg-orange-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                    >
+                                        <div className="font-medium text-gray-800">{user.firstname} {user.lastname}</div>
+                                        <div className="text-sm text-gray-600">{user.email}</div>
+                                        {user.phone && <div className="text-xs text-gray-500">{user.phone}</div>}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <InputGroup
+                            label="Owner Email"
+                            icon={Mail}
+                            type="email"
+                            name="ownerEmail"
+                            placeholder="jane.doe@example.com"
+                            value={shopData.ownerEmail}
+                            disabled={true}
+                        />
+                        <InputGroup
+                            label="Owner Full Name"
+                            icon={User}
+                            name="ownerName"
+                            placeholder="Jane Doe"
+                            value={shopData.ownerName}
+                            disabled={true}
+                        />
+                        <InputGroup
+                            label="Phone Number"
+                            icon={Phone}
+                            type="tel"
+                            name="ownerPhone"
+                            placeholder="+254 7XX XXX XXX"
+                            value={shopData.ownerPhone}
+                            disabled={true}
+                        />
+                    </div>
+
+                    {/* Administration & Status Section */}
+                    <h3 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4 pt-6">Administration</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div>
+                            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <select
+                                id="status"
+                                name="status"
+                                value={shopData.status}
+                                onChange={handleChange}
+                                className="w-full py-3 px-3 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:border-orange-500 transition duration-150 text-gray-800"
+                            >
+                                <option value="Active">Active</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Suspended">Suspended</option>
+                            </select>
+                        </div>
+
+                        <div className="sm:col-span-2 flex items-center pt-5">
+                            <input
+                                id="verified"
+                                name="verified"
+                                type="checkbox"
+                                checked={shopData.verified}
+                                onChange={handleChange}
+                                className="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                            />
+                            <label htmlFor="verified" className="ml-2 block text-sm text-gray-900">
+                                Mark as verified (Bypass verification process)
+                            </label>
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex justify-end space-x-4 pt-8">
+                        <button
+                            type="button"
+                            onClick={() => router.push('/adminDashboard/shops')}
+                            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-100 transition duration-200"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className="bg-[#985942] text-white px-6 py-2 rounded-xl font-semibold shadow-md hover:bg-[#864c37] transition duration-200"
+                        >
+                            Save Shop
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    );
+};
+
+export default AddShopView;

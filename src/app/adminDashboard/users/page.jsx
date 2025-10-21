@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 import User from '../../api/user/api'
 import { getSession } from "next-auth/react";
+import sellers from "../../api/seller/api";
+import { toast } from "react-toastify";
 
 const fetchUsers = async (userSession) => {
     const response = await User.getAll(userSession)
@@ -47,18 +49,19 @@ const UsersView = ({ onViewChange }) => {
     const [roleFilter, setRoleFilter] = useState('All Roles');
     const [statusFilter, setStatusFilter] = useState('All Statuses');
     const [users, setUsers] = useState([]);
-
-    useEffect(() => {
-        const fetchAllUsers = async () => {
-            try {
-                const adminSession = await getSession();
-                const response = await fetchUsers(adminSession)
-                console.log(response)
-                setUsers(response.users)
-            } catch (error) {
-                console.error("Failed to fetch users:", error);
-            }
+    const [adminDetails, setAdminDetails] = useState(null);
+    const fetchAllUsers = async () => {
+        try {
+            const adminSession = await getSession();
+            setAdminDetails(adminSession.user);
+            const response = await fetchUsers(adminSession)
+            console.log(response)
+            setUsers(response.users)
+        } catch (error) {
+            console.error("Failed to fetch users:", error);
         }
+    }
+    useEffect(() => {
         fetchAllUsers()
     }, [])
 
@@ -77,6 +80,16 @@ const UsersView = ({ onViewChange }) => {
         return matchesSearch && matchesRole && matchesStatus;
     });
 
+    const handleActivateSeller = async (user) => {
+        try {
+
+            const res = await sellers.adminMakeSellerVerified(user.id, adminDetails.accessToken);
+            fetchAllUsers();
+            toast.success('Seller activated successfully');
+        } catch (error) {
+            toast.error('Failed to activate seller');
+        }
+    }
 
     return (
         <div className="space-y-6">
@@ -176,7 +189,7 @@ const UsersView = ({ onViewChange }) => {
                                     {user.isVerified ? (
                                         <a href="#" className="text-red-600 hover:text-red-900">Suspend</a>
                                     ) : (
-                                        <a href="#" className="text-green-600 hover:text-green-900">Activate</a>
+                                        <button onClick={() => handleActivateSeller(user)} className="text-green-600 hover:text-green-900">Activate</button>
                                     )}
                                 </td>
                             </tr>
