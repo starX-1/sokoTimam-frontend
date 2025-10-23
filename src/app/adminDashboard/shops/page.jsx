@@ -442,6 +442,7 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
 
 // --- Main Shops View Component ---
 const ShopsView = () => {
+    const router = useRouter();
     const [shops, setShops] = useState([]);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedShop, setSelectedShop] = useState(null);
@@ -462,7 +463,7 @@ const ShopsView = () => {
         fetchShops();
     }, []);
 
-    const router = useRouter();
+    // const router = useRouter();
 
     const getStatusStyles = (status) => {
         switch (status?.toLowerCase()) {
@@ -490,9 +491,8 @@ const ShopsView = () => {
     //     setShops(filteredShops);
     // };
 
-    const handleEditClick = (shop) => {
-        setSelectedShop(shop);
-        setIsEditModalOpen(true);
+    const handleViewClick = (shop) => {
+        router.push(`/adminDashboard/shops/view/${shop.id}`);
     };
 
     const handleSaveShop = async (shopId, updatedData) => {
@@ -539,12 +539,12 @@ const ShopsView = () => {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                 <h2 className="text-3xl font-bold text-gray-800">Shop Management</h2>
-                <button
+                {/* <button
                     onClick={() => router.push('/adminDashboard/shops/addShop')}
                     className="mt-4 sm:mt-0 bg-orange-600 text-white px-5 py-2 rounded-xl font-semibold shadow-md hover:bg-orange-700 transition duration-200"
                 >
                     + Add New Shop
-                </button>
+                </button> */}
             </div>
 
             <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
@@ -617,10 +617,10 @@ const ShopsView = () => {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <button
-                                        onClick={() => handleEditClick(shop)}
+                                        onClick={() => handleViewClick(shop)}
                                         className="text-indigo-600 hover:text-indigo-900 mr-3 transition duration-150"
                                     >
-                                        Edit
+                                        View
                                     </button>
                                     <button className="text-red-600 hover:text-red-900 transition duration-150">Delete</button>
                                 </td>
