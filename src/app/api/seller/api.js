@@ -45,6 +45,15 @@ class sellers {
         const response = await instance.get(`/seller/user/${id}`)
         return response.data
     }
+    async sellerProducts(sellerId, accessToken) {
+        const response = await instance.get(`/seller/${sellerId}/products`, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
+        })
+        return response.data
+    }
+    
 }
 
 export default new sellers();

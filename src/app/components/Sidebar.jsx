@@ -5,7 +5,7 @@ import { signOut } from "next-auth/react";
 const navItems = [
     { name: 'Dashboard', icon: Home, href: '/adminDashboard' },
     { name: 'Shops', icon: ShoppingCart, href: '/adminDashboard/shops' },
-    { name: 'Products', icon: Package, href: '/adminDashboard/products' },
+    // { name: 'Products', icon: Package, href: '/adminDashboard/products' },
     { name: 'Users', icon: Users, href: '/adminDashboard/users' },
     // { name: 'Analytics', icon: BarChart3, href: '#/analytics' },
     { name: 'Categories', icon: ChartBar, href: '/adminDashboard/categories' },

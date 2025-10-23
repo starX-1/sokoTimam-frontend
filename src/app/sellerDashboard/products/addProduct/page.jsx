@@ -7,6 +7,7 @@ import Categories from '../../../api/categories/api'
 import Products from '../../../api/products/api'
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import sellers from '../../../api/seller/api'
 
 
 // InputGroup component remains the same
@@ -42,12 +43,12 @@ const AddProductView = ({ onViewChange }) => {
         description: "",
         price: 0,
         stock: 0,
-        sku: "",
+        // sku: "",
         status: "",
         images: [], // Changed from imageUrl to images array
         subcategoryId: '', // Added subcategory ID
-        rating: 0,
-        salesCount: 0
+        // rating: 0,
+        // salesCount: 0
     });
 
     // State for fetched data
@@ -56,7 +57,7 @@ const AddProductView = ({ onViewChange }) => {
     const [everyCat, setEveryCat] = useState([]);
     const [subcategories, setSubcategories] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [adminSession, setAdminSession] = useState(null);
+    const [sellerSession, setSellerSession] = useState(null);
     const router = useRouter();
 
     // Fetch shops and categories on component mount
@@ -65,9 +66,11 @@ const AddProductView = ({ onViewChange }) => {
             setLoading(true);
             try {
                 const session = await getSession();
-                setAdminSession(session);
+                setSellerSession(session);
+                // get seller data from sission storage 
+                const sellerData = JSON.parse(sessionStorage.getItem('sellerData'));
                 // Fetch shops
-                const shopsResponse = await Shops.getAllShops(session.user.accessToken);
+                const shopsResponse = await sellers.getAllMyShops(sellerData.id, session.user.accessToken);
                 // const shopsData = await shopsResponse.json();
                 // console.log(shopsResponse)
                 setShops(shopsResponse.shops);
@@ -152,11 +155,11 @@ const AddProductView = ({ onViewChange }) => {
                 }
             });
 
-            const response = await Products.createProduct(adminSession.user.accessToken, formData);
+            const response = await Products.createProduct(sellerSession.user.accessToken, formData);
 
             if (response.message === "Product created successfully") {
                 toast.success("Product created successfully");
-                router.push('/adminDashboard/products');
+                router.push('/sellerDashboard/products');
                 // onViewChange('#/products');
             } else {
                 console.error('Failed to add product');
@@ -198,14 +201,14 @@ const AddProductView = ({ onViewChange }) => {
                                 value={productData.name}
                                 onChange={handleChange}
                             />
-                            <InputGroup
+                            {/* <InputGroup
                                 label="SKU (Stock Keeping Unit)"
                                 icon={Tag}
                                 name="sku"
                                 placeholder="e.g., WCR-001"
                                 value={productData.sku}
                                 onChange={handleChange}
-                            />
+                            /> */}
                         </div>
 
                         {/* IDs and Numeric Data */}
@@ -366,7 +369,7 @@ const AddProductView = ({ onViewChange }) => {
 
                         {/* Readonly/Hidden fields */}
                         <div className="grid grid-cols-2 gap-6">
-                            <InputGroup
+                            {/* <InputGroup
                                 label="Initial Rating (Readonly)"
                                 icon={Hash}
                                 type="number"
@@ -375,8 +378,8 @@ const AddProductView = ({ onViewChange }) => {
                                 onChange={handleChange}
                                 isRequired={false}
                                 min="0"
-                            />
-                            <InputGroup
+                            /> */}
+                            {/* <InputGroup
                                 label="Initial Sales Count (Readonly)"
                                 icon={TrendingUp}
                                 type="number"
@@ -385,7 +388,7 @@ const AddProductView = ({ onViewChange }) => {
                                 onChange={handleChange}
                                 isRequired={false}
                                 min="0"
-                            />
+                            /> */}
                         </div>
 
                         {/* Actions */}

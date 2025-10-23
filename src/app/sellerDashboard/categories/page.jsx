@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Categories from '../../api/categories/api'
 import { getSession } from "next-auth/react";
 import { toast } from "react-toastify";
+import sellers from "../../api/seller/api";
 
 // --- Component: Create Category Modal ---
 
@@ -16,7 +17,8 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
     const [parentId, setParentId] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [parentCategories, setParentCategories] = useState([]);
-    const [adminSession, setAdminSession] = useState(null);
+    const [sellerSession, setSellerSession] = useState(null);
+    const [sellerShop, setSellerShop] = useState({})
 
     // Reset state when the modal opens/closes
     useEffect(() => {
@@ -32,7 +34,8 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
         const fetchParentCategories = async () => {
             try {
                 const session = await getSession();
-                setAdminSession(session); const response = await Categories.getCategories();
+                setSellerSession(session);
+                const response = await Categories.getCategories();
                 setParentCategories(response.categories);
             } catch (error) {
                 console.error("Failed to fetch parent categories:", error);
@@ -42,8 +45,25 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
         fetchParentCategories();
     }, []);
 
-    console.log('Parent Categories:', parentCategories);
+    // useefect to fetch seller shop using the session storage 
+    useEffect(() => {
+        const fetchSellerShop = async () => {
+            if (sellerSession) {
+                try {
+                    const sellerData = JSON.parse(sessionStorage.getItem('sellerData'));
+                    const response = await sellers.getAllMyShops(sellerData.id, sellerSession.user.accessToken);
+                    setSellerShop(response.shops);
+                    console.log("Fetched seller shop:", response.shops);
+                } catch (error) {
+                    console.error("Failed to fetch seller shop:", error);
+                }
+            }
+        };
 
+        fetchSellerShop();
+    }, [sellerSession]);
+
+console.log("Seller Shop in Modal:", sellerShop);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -54,7 +74,8 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
         // In a real application, you'd call an API here, like:
         try {
             const newCategory = { name, parentId: parentIdValue };
-            await Categories.createCategory(newCategory, adminSession.user.accessToken);
+            const shopId = sellerShop && sellerShop.length > 0 ? sellerShop[0].id : null;
+            await Categories.createCategory({...newCategory, shopId}, sellerSession.user.accessToken);
             // You would then trigger a re-fetch of the category list in CategoriesView
             onClose(true); // Close and signify a successful action
         } catch (error) {
