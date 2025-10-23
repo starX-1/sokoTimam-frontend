@@ -600,7 +600,7 @@ const ShopsView = () => {
                                     )}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {shop?.owner?.firstname} {shop?.owner?.lastname}
+                                    {shop.seller.fullname}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{shop?.products?.length || 0}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
