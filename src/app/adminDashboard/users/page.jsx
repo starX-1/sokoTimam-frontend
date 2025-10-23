@@ -76,8 +76,8 @@ const UsersView = ({ onViewChange }) => {
         const matchesSearch = user.firstname.toLowerCase().includes(searchTerm.toLowerCase()) ||
             user.email.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesRole = roleFilter === 'All Roles' || user.role === roleFilter;
-        const matchesStatus = statusFilter === 'All Statuses' || user.status === statusFilter;
-        return matchesSearch && matchesRole && matchesStatus;
+        // const matchesStatus = statusFilter === 'All Statuses' || user.status === statusFilter;
+        return matchesSearch && matchesRole ;
     });
 
     const handleActivateSeller = async (user) => {
@@ -122,11 +122,11 @@ const UsersView = ({ onViewChange }) => {
                             onChange={(e) => setRoleFilter(e.target.value)}
                             className="flex-1 py-2 px-4 border border-gray-200 rounded-xl text-sm focus:outline-none text-orange-700 focus:ring-orange-500 focus:border-orange-500">
                             <option>All Roles</option>
-                            <option>admin</option>
-                            <option>Shop Owner</option>
-                            <option>customer</option>
+                            <option value={'admin'}>Admin</option>
+                            <option value={'seller'}>Shop Owner</option>
+                            <option value={'customer'}>Customer</option>
                         </select>
-                        <select
+                        {/* <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                             className="flex-1 py-2 px-4 border border-gray-200 rounded-xl text-sm focus:outline-none text-orange-700 focus:ring-orange-500 focus:border-orange-500">
@@ -134,7 +134,7 @@ const UsersView = ({ onViewChange }) => {
                             <option>Verified</option>
                             <option>unverified</option>
                             <option>Suspended</option>
-                        </select>
+                        </select> */}
                     </div>
                 </div>
 
@@ -144,7 +144,7 @@ const UsersView = ({ onViewChange }) => {
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Details</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th> */}
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
@@ -173,11 +173,11 @@ const UsersView = ({ onViewChange }) => {
                                         {user.role}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                {/* <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusStyles(user.status)}`}>
                                         {user.isVerified ? 'Verified' : 'Not Verified'}
                                     </span>
-                                </td>
+                                </td> */}
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                     <div className="flex items-center">
                                         <Calendar className="w-4 h-4 mr-1 text-gray-400" />
@@ -186,10 +186,10 @@ const UsersView = ({ onViewChange }) => {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     {/* <a href="#" className="text-indigo  -600 hover:text-indigo-900 mr-3">Edit</a> */}
-                                    {user.isVerified ? (
+                                    {user.role === 'seller' ? (
                                         <a href="#" className="text-red-600 hover:text-red-900">Suspend</a>
                                     ) : (
-                                        <button onClick={() => handleActivateSeller(user)} className="text-green-600 hover:text-green-900">Activate</button>
+                                        <button onClick={() => handleActivateSeller(user)} className="text-green-600 hover:text-green-900">Make Seller</button>
                                     )}
                                 </td>
                             </tr>
