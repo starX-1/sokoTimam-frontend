@@ -21,8 +21,8 @@ class sellers {
         const response = await instance.post('/seller/register', data)
         return response.data
     }
-    async adminMakeSellerVerified(id, token) {
-        const response = await instance.put(`/user/${id}`, { role: 'seller' }, {
+    async adminMakeSellerVerified(id, role, token) {
+        const response = await instance.put(`/user/${id}`,  role, {
             headers: {
                 Authorization: `Bearer ${token}`
             }

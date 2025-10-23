@@ -77,13 +77,18 @@ const UsersView = ({ onViewChange }) => {
             user.email.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesRole = roleFilter === 'All Roles' || user.role === roleFilter;
         // const matchesStatus = statusFilter === 'All Statuses' || user.status === statusFilter;
-        return matchesSearch && matchesRole ;
+        return matchesSearch && matchesRole;
     });
 
     const handleActivateSeller = async (user) => {
         try {
-
-            const res = await sellers.adminMakeSellerVerified(user.id, adminDetails.accessToken);
+            if (user.role === 'seller') {
+                const res = await sellers.adminMakeSellerVerified(user.id, { role: 'customer' }, adminDetails.accessToken);
+                fetchAllUsers();
+                toast.success('Seller deactivated successfully');
+                return;
+            }
+            const res = await sellers.adminMakeSellerVerified(user.id, { role: 'seller' }, adminDetails.accessToken);
             fetchAllUsers();
             toast.success('Seller activated successfully');
         } catch (error) {
@@ -187,7 +192,7 @@ const UsersView = ({ onViewChange }) => {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     {/* <a href="#" className="text-indigo  -600 hover:text-indigo-900 mr-3">Edit</a> */}
                                     {user.role === 'seller' ? (
-                                        <a href="#" className="text-red-600 hover:text-red-900">Suspend</a>
+                                        <button onClick={() => handleActivateSeller(user)} className="text-red-600 hover:text-red-900">Suspend</button>
                                     ) : (
                                         <button onClick={() => handleActivateSeller(user)} className="text-green-600 hover:text-green-900">Make Seller</button>
                                     )}
