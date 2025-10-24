@@ -8,6 +8,7 @@ import Shops from '../../api/shop/api'
 // --- Edit Shop Modal Component ---
 // import { useState, useEffect } from 'react';
 import { Image, AlertCircle } from 'lucide-react';
+import { toast } from "react-toastify";
 
 const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
     const [formData, setFormData] = useState({
@@ -534,6 +535,37 @@ const ShopsView = () => {
             shop.status?.toLowerCase() === statusFilter.toLowerCase();
         return matchesSearch && matchesStatus;
     });
+    const handleActivate = async (shop) => {
+        console.log('Activating shop:', shop.id);
+        try {
+            const adminSession = await getSession();
+            const updatedData = { status: 'active' };
+            const res = await Shops.updateShop(shop.id, updatedData, adminSession.user.accessToken);
+            console.log('Shop activated:', res);
+            toast.success('Shop activated successfully!');
+            // refetch shops 
+            const res2 = await Shops.getAllShops(adminSession.user.accessToken);
+            setShops(res2.shops);
+        } catch (error) {
+            console.error('Error activating shop:', error);
+        }
+    }
+    const handleSuspend = async (shop) => {
+        console.log('Suspending shop:', shop.id);
+        try {
+            const adminSession = await getSession();
+            const updatedData = { status: 'suspended' };
+            const res = await Shops.updateShop(shop.id, updatedData, adminSession.user.accessToken);
+            console.log('Shop suspended:', res);
+            toast.success('Shop suspended successfully!');
+
+            // refetch shops 
+            const res2 = await Shops.getAllShops(adminSession.user.accessToken);
+            setShops(res2.shops);
+        } catch (error) {
+            console.error('Error suspending shop:', error);
+        }
+    }
 
     return (
         <div className="space-y-6">
@@ -580,7 +612,7 @@ const ShopsView = () => {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Products</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Verified</th>
+                            {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Verified</th> */}
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
@@ -608,13 +640,13 @@ const ShopsView = () => {
                                         {shop.status}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                {/* <td className="px-6 py-4 whitespace-nowrap text-sm">
                                     {shop.verified ? (
                                         <Check className="w-5 h-5 text-green-500" />
                                     ) : (
                                         <XCircle className="w-5 h-5 text-red-400" />
                                     )}
-                                </td>
+                                </td> */}
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <button
                                         onClick={() => handleViewClick(shop)}
@@ -622,7 +654,28 @@ const ShopsView = () => {
                                     >
                                         View
                                     </button>
-                                    <button className="text-red-600 hover:text-red-900 transition duration-150">Delete</button>
+                                    <button className="text-red-600 hover:text-red-900 transition duration-150">
+                                        Delete
+                                    </button>
+
+                                    {/* Conditional Button Rendering */}
+                                    {shop.status === 'suspended' ? (
+                                        // Show 'Activate' if the shop is currently Suspended
+                                        <button
+                                            onClick={() => handleActivate(shop)}
+                                            className="text-indigo-600 hover:text-indigo-900 ml-3 transition duration-150"
+                                        >
+                                            Activate
+                                        </button>
+                                    ) : (
+                                        // Otherwise (if Active, etc.), show 'Suspend'
+                                        <button
+                                            onClick={() => handleSuspend(shop)}
+                                            className="text-red-600 hover:text-red-900 ml-3 transition duration-150"
+                                        >
+                                            Suspend
+                                        </button>
+                                    )}
                                 </td>
                             </tr>
                         ))}
