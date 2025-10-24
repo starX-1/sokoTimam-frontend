@@ -29,7 +29,7 @@ const AdminDashboardLayout = ({ children }) => {
                 <Header setIsSidebarOpen={setIsSidebarOpen} />
 
                 {/* Content */}
-                <main className="flex-1 p-4 sm:p-6 pb-10">
+                <main className="flex-1 p-4 pb-10">
                     {children ? children : defaultChildren}
                 </main>
             </div>

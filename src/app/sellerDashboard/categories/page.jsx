@@ -280,7 +280,7 @@ const CategoriesView = () => {
     }
 
     return (
-        <div className="space-y-6 p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
+        <div className="space-y-6 p-4 lg:p-8 bg-gray-50 min-h-screen">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                 <h2 className="text-3xl font-extrabold text-gray-900">Category Management</h2>
                 <button

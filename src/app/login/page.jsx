@@ -149,7 +149,7 @@ const LoginPage = ({ onViewChange }) => {
 
     return (
         // Full screen container, responsive padding
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6 font-sans">
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans">
 
             {/* Login Card Container (max-w-md ensures it's centered and not too wide on desktop) */}
             <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform">
