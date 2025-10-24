@@ -8,40 +8,63 @@ import sellers from '../../api/seller/api'
 
 // --- Edit Shop Modal Component ---
 // import { useState, useEffect } from 'react';
-import { Image, AlertCircle } from 'lucide-react';
+import { Image } from 'lucide-react';
+
+// import React, { useState, useEffect } from 'react';
+// Assuming you have these icons imported from a library like 'lucide-react'
+import { AlertCircle, BookOpen } from 'lucide-react';
+
+// Mock categories for the Primary Category dropdown
+const PRIMARY_CATEGORIES = [
+    'Home & Kitchen',
+    'Electronics',
+    'Fashion & Apparel',
+    'Health & Beauty',
+    'Sports & Outdoors',
+    'Automotive',
+    'Toys & Games',
+    'Books & Media',
+    'Other'
+];
 
 const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
+    // 1. Updated formData to match editable fields from your shop data
     const [formData, setFormData] = useState({
         name: '',
         description: '',
-        location: '',
-        status: 'active',
-        logo: '',
-        cover: ''
+        address: '', // Mapped from shop.address
+        city: '',     // Mapped from shop.city
+        postalCode: '', // Mapped from shop.postalCode
+        primaryCategory: '', // Mapped from shop.primaryCategory
+        status: 'pending', // Mapped from shop.status
+        logoUrl: '', // Mapped from shop.logoUrl
     });
 
     const [logoFile, setLogoFile] = useState(null);
-    const [coverFile, setCoverFile] = useState(null);
     const [logoPreview, setLogoPreview] = useState('');
-    const [coverPreview, setCoverPreview] = useState('');
+    // Removed cover-related state (coverFile, coverPreview) as it's not in your data
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // 2. Updated useEffect to map new shop properties
     useEffect(() => {
         if (shop) {
             setFormData({
                 name: shop.name || '',
                 description: shop.description || '',
-                location: shop.location || '',
-                status: shop.status || 'active',
-                logo: shop.logo || '',
-                cover: shop.cover || ''
+                address: shop.address || '',
+                city: shop.city || '',
+                postalCode: shop.postalCode || '',
+                primaryCategory: shop.primaryCategory || PRIMARY_CATEGORIES[0], // Use first category as default
+                status: shop.status || 'pending',
+                logoUrl: shop.logoUrl || '',
             });
-            setLogoPreview(shop.logo || '');
-            setCoverPreview(shop.cover || '');
+            // Use logoUrl from shop data for the initial preview
+            setLogoPreview(shop.logoUrl || '');
         }
     }, [shop]);
 
+    // 3. Updated handleChange - remains largely the same, handles all fields in formData
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -54,7 +77,9 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
         }
     };
 
-    const handleFileChange = (e, type) => {
+    // 4. handleFileChange is simplified for logo only
+    const handleFileChange = (e) => {
+        const type = 'logo'; // Only handling logo now
         const file = e.target.files[0];
         if (!file) return;
 
@@ -82,27 +107,17 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
         // Create preview
         const reader = new FileReader();
         reader.onloadend = () => {
-            if (type === 'logo') {
-                setLogoFile(file);
-                setLogoPreview(reader.result);
-            } else {
-                setCoverFile(file);
-                setCoverPreview(reader.result);
-            }
+            setLogoFile(file);
+            setLogoPreview(reader.result);
         };
         reader.readAsDataURL(file);
     };
 
-    const removeImage = (type) => {
-        if (type === 'logo') {
-            setLogoFile(null);
-            setLogoPreview('');
-            setFormData(prev => ({ ...prev, logo: '' }));
-        } else {
-            setCoverFile(null);
-            setCoverPreview('');
-            setFormData(prev => ({ ...prev, cover: '' }));
-        }
+    // 5. removeImage is simplified for logo only
+    const removeImage = () => {
+        setLogoFile(null);
+        setLogoPreview('');
+        setFormData(prev => ({ ...prev, logoUrl: '' }));
     };
 
     const validateForm = () => {
@@ -118,10 +133,19 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
             newErrors.description = 'Description must be at least 10 characters';
         }
 
+        if (!formData.address.trim()) {
+            newErrors.address = 'Address is required';
+        }
+
+        if (!formData.city.trim()) {
+            newErrors.city = 'City is required';
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
+    // 6. handleSubmit updated to reflect the new data structure
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -132,12 +156,17 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
         setIsSubmitting(true);
 
         try {
-            // Prepare data to send - you'll need to handle file upload here
+            // Prepare data to send - only send editable fields
             const submitData = {
-                ...formData,
-                logoFile,
-                coverFile,
-                ownerId: shop.ownerId
+                name: formData.name,
+                description: formData.description,
+                address: formData.address,
+                city: formData.city,
+                postalCode: formData.postalCode,
+                primaryCategory: formData.primaryCategory,
+                status: formData.status,
+                logoFile: logoFile, // This is the actual File object
+                logoUrl: formData.logoUrl, // Keep existing URL if no new file
             };
 
             console.log('Submit Data:', submitData);
@@ -155,6 +184,20 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
     };
 
     if (!isOpen) return null;
+
+    // Helper function to get status badge style
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'active':
+                return 'text-green-700 bg-green-100 border-green-200';
+            case 'pending':
+                return 'text-yellow-700 bg-yellow-100 border-yellow-200';
+            case 'suspended':
+                return 'text-red-700 bg-red-100 border-red-200';
+            default:
+                return 'text-gray-700 bg-gray-100 border-gray-200';
+        }
+    };
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fadeIn">
@@ -229,34 +272,95 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
                             </div>
                         </div>
 
-                        {/* Location */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Location
-                            </label>
-                            <div className="relative">
-                                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        {/* --- Location Group (Address, City, Postal Code) --- */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* Address */}
+                            <div className="md:col-span-3">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Shop Address <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative">
+                                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        name="address"
+                                        value={formData.address}
+                                        onChange={handleChange}
+                                        className={`w-full pl-10 pr-4 py-3 border ${errors.address ? 'border-red-300' : 'border-gray-300'} rounded-xl focus:outline-none text-gray-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition duration-200`}
+                                        placeholder="E.g., 123 Main Street"
+                                    />
+                                </div>
+                                {errors.address && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.address}</p>
+                                )}
+                            </div>
+
+                            {/* City */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    City <span className="text-red-500">*</span>
+                                </label>
                                 <input
                                     type="text"
-                                    name="location"
-                                    value={formData.location}
+                                    name="city"
+                                    value={formData.city}
                                     onChange={handleChange}
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none text-gray-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition duration-200"
-                                    placeholder="Enter shop location"
+                                    className={`w-full px-4 py-3 border ${errors.city ? 'border-red-300' : 'border-gray-300'} rounded-xl focus:outline-none text-gray-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition duration-200`}
+                                    placeholder="City"
+                                />
+                                {errors.city && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.city}</p>
+                                )}
+                            </div>
+
+                            {/* Postal Code */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Postal Code
+                                </label>
+                                <input
+                                    type="text"
+                                    name="postalCode"
+                                    value={formData.postalCode || ''} // Handle null postalCode
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none text-gray-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition duration-200"
+                                    placeholder="e.g., 00100"
                                 />
                             </div>
+
+                            {/* Primary Category */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Primary Category
+                                </label>
+                                <div className="relative">
+                                    <BookOpen className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                                    <select
+                                        name="primaryCategory"
+                                        value={formData.primaryCategory}
+                                        onChange={handleChange}
+                                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none text-gray-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition duration-200 bg-white cursor-pointer appearance-none"
+                                    >
+                                        {PRIMARY_CATEGORIES.map(category => (
+                                            <option key={category} value={category}>{category}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
                         </div>
+                        {/* --- END Location Group --- */}
 
                         {/* Status */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Status <span className="text-red-500">*</span>
+                                Shop Status (only admin can change)
                             </label>
                             <select
                                 name="status"
                                 value={formData.status}
                                 onChange={handleChange}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none text-gray-800 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition duration-200 bg-white cursor-pointer"
+                                disabled
                             >
                                 <option value="active">✓ Active - Shop is live</option>
                                 <option value="pending">⏳ Pending - Awaiting approval</option>
@@ -274,7 +378,7 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
                                     <input
                                         type="file"
                                         accept="image/*"
-                                        onChange={(e) => handleFileChange(e, 'logo')}
+                                        onChange={handleFileChange}
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                         id="logo-upload"
                                     />
@@ -295,12 +399,16 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
                                     <div className="relative flex items-center space-x-3 p-3 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border border-orange-200">
                                         <img src={logoPreview} alt="Logo preview" className="w-16 h-16 object-cover rounded-lg shadow-sm" />
                                         <div className="flex-1">
-                                            <p className="text-sm font-medium text-gray-900">Logo preview</p>
-                                            <p className="text-xs text-gray-500">Image ready to upload</p>
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {logoFile ? 'New Logo Preview' : 'Current Logo'}
+                                            </p>
+                                            <p className="text-xs text-gray-500">
+                                                {logoFile ? 'Image ready to upload' : 'Will use current logo unless changed'}
+                                            </p>
                                         </div>
                                         <button
                                             type="button"
-                                            onClick={() => removeImage('logo')}
+                                            onClick={removeImage}
                                             className="p-2 hover:bg-red-100 rounded-lg transition duration-200"
                                             aria-label="Remove logo"
                                         >
@@ -310,75 +418,32 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
                                 )}
                             </div>
                         </div>
-
-                        {/* Cover Upload */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Cover Image
-                            </label>
-                            <div className="space-y-3">
-                                <div className={`relative border-2 border-dashed ${errors.cover ? 'border-red-300' : 'border-gray-300'} rounded-xl p-4 hover:border-orange-400 transition duration-200`}>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => handleFileChange(e, 'cover')}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                        id="cover-upload"
-                                    />
-                                    <div className="text-center">
-                                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                                        <p className="text-sm text-gray-600">
-                                            <label htmlFor="cover-upload" className="text-orange-500 font-semibold cursor-pointer hover:text-orange-600">
-                                                Click to upload
-                                            </label> or drag and drop
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB (Recommended: 1200x400px)</p>
-                                    </div>
-                                </div>
-                                {errors.cover && (
-                                    <p className="text-red-500 text-xs">{errors.cover}</p>
-                                )}
-                                {coverPreview && (
-                                    <div className="relative rounded-xl overflow-hidden border-2 border-orange-200 shadow-sm">
-                                        <img src={coverPreview} alt="Cover preview" className="w-full h-40 object-cover" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end justify-between p-3">
-                                            <span className="text-xs text-white font-medium">Cover preview</span>
-                                            <button
-                                                type="button"
-                                                onClick={() => removeImage('cover')}
-                                                className="p-2 bg-white/90 hover:bg-white rounded-lg transition duration-200"
-                                                aria-label="Remove cover"
-                                            >
-                                                <X className="w-4 h-4 text-red-500" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                        {/* Removed Cover Upload section */}
 
                         {/* Shop Info Summary */}
                         <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-5 rounded-xl border border-orange-200">
                             <h4 className="text-sm font-bold text-orange-900 mb-3 flex items-center">
                                 <Check className="w-4 h-4 mr-2" />
-                                Current Shop Information
+                                Current Shop & Seller Information
                             </h4>
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
-                                    <p className="text-gray-600 font-medium mb-1">Owner</p>
-                                    <p className="text-gray-900 font-semibold">{shop?.owner?.firstname} {shop?.owner?.lastname}</p>
+                                    <p className="text-gray-600 font-medium mb-1">Seller Name</p>
+                                    <p className="text-gray-900 font-semibold">{shop?.seller?.fullname || 'N/A'}</p>
                                 </div>
                                 <div>
-                                    <p className="text-gray-600 font-medium mb-1">Products</p>
-                                    <p className="text-gray-900 font-semibold">{shop?.products?.length || 0} items</p>
+                                    <p className="text-gray-600 font-medium mb-1">Seller Email</p>
+                                    <p className="text-gray-900 font-semibold">{shop?.seller?.email || 'N/A'}</p>
                                 </div>
                                 <div>
-                                    <p className="text-gray-600 font-medium mb-1">Rating</p>
-                                    <p className="text-gray-900 font-semibold">{shop?.rating || 'N/A'} ⭐</p>
+                                    <p className="text-gray-600 font-medium mb-1">Products Count</p>
+                                    <p className="text-gray-900 font-semibold">{shop?.products?.length || 0}</p>
                                 </div>
                                 <div>
-                                    <p className="text-gray-600 font-medium mb-1">Shop ID</p>
-                                    <p className="text-gray-900 font-semibold">#{shop?.id}</p>
+                                    <p className="text-gray-600 font-medium mb-1">Status</p>
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusStyle(shop?.status)} border`}>
+                                        {shop?.status}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -440,6 +505,7 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
         </div>
     );
 };
+// export default EditShopModal; // Uncomment this if it's the only export
 
 // --- Main Shops View Component ---
 const ShopsView = () => {
@@ -505,31 +571,37 @@ const ShopsView = () => {
         try {
             const sellerSession = await getSession();
 
-            // add logo and cover keys to updatedData
+            // Create FormData for file upload
+            const formData = new FormData();
+
+            // Append all text fields
+            formData.append('name', updatedData.name);
+            formData.append('description', updatedData.description);
+            formData.append('address', updatedData.address);
+            formData.append('city', updatedData.city);
+            formData.append('postalCode', updatedData.postalCode || '');
+            formData.append('primaryCategory', updatedData.primaryCategory);
+            formData.append('status', updatedData.status);
+
+            // Append logo file if a new one was selected
             if (updatedData.logoFile) {
-                updatedData.logo = updatedData.logoFile;
+                formData.append('logo', updatedData.logoFile);
             }
-            if (updatedData.coverFile) {
-                updatedData.cover = updatedData.coverFile;
-            }
+
             // Call your API to update the shop
-            const res = await Shops.updateShop(shopId, updatedData, sellerSession.user.accessToken);
+            const res = await Shops.updateShop(shopId, formData, sellerSession.user.accessToken);
 
-            console.log(res)
+            console.log(res);
 
-            // Update local state
-            // setShops(shops.map(shop =>
-            //     shop.id === shopId ? { ...shop, ...updatedData } : shop
-            // ));
-
-            // refetch shops 
-            const res2 = await Shops.getAllShops(sellerSession.user.accessToken);
+            // Refetch shops using the correct API call
+            const res2 = await sellers.getAllMyShops(seller.id, sellerSession.user.accessToken);
             setShops(res2.shops);
 
             setIsEditModalOpen(false);
             console.log('Shop updated:', shopId, updatedData);
         } catch (error) {
             console.error('Error updating shop:', error);
+            // Optionally show error toast/message to user
         }
     };
 
@@ -542,17 +614,20 @@ const ShopsView = () => {
     });
 
     // console.log(seller)
+    const handleViewClick = (shop) => {
+        router.push(`/sellerDashboard/shops/view/${shop.id}`);
+    }
 
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                 <h2 className="text-3xl font-bold text-gray-800">Shop Management</h2>
-                <button
+                {/* <button
                     onClick={() => router.push('/adminDashboard/shops/addShop')}
                     className="mt-4 sm:mt-0 bg-orange-600 text-white px-5 py-2 rounded-xl font-semibold shadow-md hover:bg-orange-700 transition duration-200"
                 >
                     + Add New Shop
-                </button>
+                </button> */}
             </div>
 
             <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
@@ -631,6 +706,7 @@ const ShopsView = () => {
                                         Edit
                                     </button>
                                     <button className="text-red-600 hover:text-red-900 transition duration-150">Delete</button>
+                                    <button onClick={() => handleViewClick(shop)} className="ml-3 text-green-600 hover:text-green-900 transition duration-150">View</button>
                                 </td>
                             </tr>
                         ))}

@@ -191,8 +191,6 @@ const SellerOnboarding = () => {
         if (!validateStep(4)) return;
 
         try {
-            // toast.info("Submitting your details...");
-
             let userId = formData.userId;
 
             // Step 1: Register user if not already registered
@@ -223,29 +221,32 @@ const SellerOnboarding = () => {
 
             const sellerResponse = await sellers.createSeller(sellerData);
 
-            // Step 3: Create shop
-            const shopData = {
-                sellerId: sellerResponse.data.id,
-                name: formData.storeName,
-                description: formData.storeDescription,
-                primaryCategory: formData.storeCategory,
-                businessType: formData.businessType,
-                address: formData.businessAddress,
-                city: formData.city,
-                kraPin: formData.kraPin,
-                businessRegistrationNumber: formData.businessRegistration,
-                taxId: formData.taxId,
-                expectedMonthlyOrders: parseInt(formData.expectedMonthlyOrders),
-                logo: formData.storeLogo,
-            };
+            // Step 3: Create shop with FormData for file upload
+            const shopFormData = new FormData();
+            shopFormData.append('sellerId', sellerResponse.data.id);
+            shopFormData.append('name', formData.storeName);
+            shopFormData.append('description', formData.storeDescription);
+            shopFormData.append('primaryCategory', formData.storeCategory);
+            shopFormData.append('businessType', formData.businessType);
+            shopFormData.append('address', formData.businessAddress);
+            shopFormData.append('city', formData.city);
+            shopFormData.append('kraPin', formData.kraPin);
+            shopFormData.append('businessRegistrationNumber', formData.businessRegistration);
+            shopFormData.append('taxId', formData.taxId);
+            shopFormData.append('expectedMonthlyOrders', parseInt(formData.expectedMonthlyOrders) || 0);
 
-            const shopResponse = await Shops.createShop(shopData);
+            // Append the logo file if it exists
+            if (formData.storeLogo) {
+                shopFormData.append('logo', formData.storeLogo);
+            }
+
+            const shopResponse = await Shops.createShop(shopFormData);
             const shopId = shopResponse?.shop.id;
             setFormData((prev) => ({ ...prev, shopId }));
 
             // Step 4: Create bank account details
             const bankData = {
-                sellerId:sellerResponse.data.id,
+                sellerId: sellerResponse.data.id,
                 bankName: formData.bankName,
                 accountNumber: formData.accountNumber,
                 accountName: formData.accountName,
