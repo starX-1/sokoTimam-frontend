@@ -1,11 +1,12 @@
 'use client'
 import { Box, Layers, Search, Tag } from "lucide-react";
 // Removed: import { useRouter } from "next/navigation";
-import Products from '../../api/products/api'
+// import Products from '../../api/products/api'
 import Shop from '../../api/shop/api'
 import Categories from '../../api/categories/api'
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useShop } from "../../Hooks/ShopContext";
 
 // --- Mock Data and API Replacement ---
 // Since the external file '../../api/products/api' cannot be resolved in this environment, 
@@ -17,10 +18,10 @@ import Link from "next/link";
 //     { id: 12, name: 'Maasai Shuka Blanket', shopId: 3, categoryId: 2, price: '3000.00', stock: 75, status: 'active', sku: 'TEX-MSB-12', ImageUrl: "https://placehold.co/100x100/CC6666/FFFFFF?text=Shuka" },
 // ];
 
-const mockGetProducts = async () => {
-    const response = await Products.getProducts();
-    return response;
-}
+// const mockGetProducts = async (id) => {
+//     const response = await Products.getProductsInSHop(id);
+//     return response;
+// }
 // -------------------------------------
 
 // Helper function to determine badge styling based on status
@@ -44,27 +45,29 @@ const getStatusStyles = (status) => {
 
 // --- Component: Products View ---
 const ProductsView = () => {
-    // State to hold the fetched products
+    const { shops, loading: shopsLoading } = useShop();
     const [products, setProducts] = useState([]);
-    // State to track loading status (optional but good practice)
     const [isLoading, setIsLoading] = useState(true);
+    const shopId = shops?.[0]?.id;
 
     useEffect(() => {
         const fetchProducts = async () => {
+            if (!shopId || shopsLoading) return;
+
+            setIsLoading(true);
             try {
-                // Using mock function to resolve the build error
-                const response = await mockGetProducts();
-                // Assuming response.products is the array of product objects
-                setProducts(response.products || [])
+                // const response = await Products.getProductsInSHop(shopId);
+                setProducts(shops[0].products || []);
             } catch (error) {
                 console.error("Failed to fetch products:", error);
-                setProducts([]); // Clear products on error
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchProducts()
-    }, [])
+
+        fetchProducts();
+    }, [shopId, shopsLoading]);
+
 
     // useeffect to fetch shops by id and also categories by id and display them
     useEffect(() => {
@@ -91,7 +94,7 @@ const ProductsView = () => {
         }
     }, [products])
 
-    console.log(products)
+    console.log(shops)
 
     // Function to format KSH currency
     const formatCurrency = (amountString) => {

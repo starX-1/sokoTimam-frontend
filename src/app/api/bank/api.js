@@ -25,6 +25,22 @@ class Accounts {
             console.log(error)
         }
     }
+    async getBySHopId(shopId) {
+        try {
+            const response = await instance.get(`/bank/details/shop/${shopId}`)
+            return response.data
+        } catch (error) {
+            console.log(error)
+        }
+    }
+    async updateAccount(id, data) {
+        try {
+            const response = await instance.put(`/bank/account/${id}`, data)
+            return response.data
+        } catch (error) {
+            console.log(error)
+        }
+    }
 }
 
 

@@ -22,10 +22,16 @@ const ProfileSidebarLink = ({ icon: Icon, label, isActive }) => (
 );
 
 
+
 // --- New Profile Page Component ---
 const ProfilePage = ({ onViewChange }) => {
 
     const [activeTab, setActiveTab] = useState('overview'); // State for active tab
+    const handleLogout = () => {
+        // clear sessionStorage
+        sessionStorage.clear();
+        signOut({ callbackUrl: '/login' });
+    }
 
     return (
         <>
@@ -60,10 +66,7 @@ const ProfilePage = ({ onViewChange }) => {
                         <div className="mt-8 pt-4 border-t text-sm text-center">
                             <a
                                 href="#"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    signOut({ callbackUrl: '/' }); // this will redirect to home after logout
-                                }}
+                                onClick={handleLogout}
                                 className="text-gray-500 hover:text-orange-600 transition"
                             >
                                 ← Sign Out

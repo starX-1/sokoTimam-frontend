@@ -21,6 +21,14 @@ class Products {
             console.log(error)
         }
     }
+    async getProductsInSHop(shopId) {
+        try {
+            const response = await instance.get(`/shop/${shopId}/products`)
+            return response.data
+        } catch (error) {
+            console.log(error)
+        }
+    }
     async deleteProduct(id) {
         try {
             const response = await instance.delete(`/product/${id}`)

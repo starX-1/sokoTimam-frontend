@@ -14,6 +14,11 @@ const navItems = [
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     const activePath = '#/dashboard';
+    const handleLogout = () => {
+        // clear sessionStorage
+        sessionStorage.clear();
+        signOut({ callbackUrl: '/login' });
+    }
 
     return (
         <>
@@ -76,7 +81,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                     />
 
                     <button type="button"
-                        onClick={() => signOut({ callbackUrl: '/login' })}
+                        onClick={handleLogout}
                         className="flex items-center space-x-3 py-3 px-4 rounded-lg transition-all duration-200 text-red-300 hover:bg-red-900/40 hover:text-white group"
                     >
                         <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />

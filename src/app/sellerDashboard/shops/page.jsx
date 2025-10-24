@@ -5,6 +5,7 @@ import { getSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import Shops from '../../api/shop/api'
 import sellers from '../../api/seller/api'
+import { useShop } from "../../Hooks/ShopContext";
 
 // --- Edit Shop Modal Component ---
 // import { useState, useEffect } from 'react';
@@ -509,12 +510,13 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
 
 // --- Main Shops View Component ---
 const ShopsView = () => {
-    const [shops, setShops] = useState([]);
+    const [shopsData, setShopsData] = useState([]);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedShop, setSelectedShop] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All Statuses');
     const [seller, setSeller] = useState(null);
+    const {shops, setShops} = useShop()
 
     useEffect(() => {
         const fetchShops = async () => {
@@ -526,6 +528,7 @@ const ShopsView = () => {
                 const res = await sellers.getAllMyShops(sellerData.id, sellerSession.user.accessToken);
                 // const res = await Shops.getAllShops(sellerSession.user.accessToken);
                 console.log(res);
+                setShopsData(res.shops);
                 setShops(res.shops);
             } catch (error) {
                 console.log(error);
@@ -534,6 +537,7 @@ const ShopsView = () => {
         fetchShops();
     }, []);
 
+    console.log("shops to context ", shops)
     const router = useRouter();
 
     const getStatusStyles = (status) => {
@@ -551,7 +555,7 @@ const ShopsView = () => {
 
     // function to handle search and status filter
     // const handleSearchAndFilter = () => {
-    //     const filteredShops = shops.filter(shop => {
+    //     const filteredShops = shopsData.filter(shop => {
     //         const shopName = shop.name.toLowerCase();
     //         const shopStatus = shop.status.toLowerCase();
     //         return (
@@ -559,7 +563,7 @@ const ShopsView = () => {
     //             (statusFilter === 'All Statuses' || shopStatus === statusFilter.toLowerCase())
     //         );
     //     });
-    //     setShops(filteredShops);
+    //     setShopsData(filteredShops);
     // };
 
     const handleEditClick = (shop) => {
@@ -593,9 +597,9 @@ const ShopsView = () => {
 
             console.log(res);
 
-            // Refetch shops using the correct API call
+            // Refetch shopsData using the correct API call
             const res2 = await sellers.getAllMyShops(seller.id, sellerSession.user.accessToken);
-            setShops(res2.shops);
+            setShopsData(res2.shopsData);
 
             setIsEditModalOpen(false);
             console.log('Shop updated:', shopId, updatedData);
@@ -605,7 +609,7 @@ const ShopsView = () => {
         }
     };
 
-    const filteredShops = shops.filter(shop => {
+    const filteredShops = shopsData.filter(shop => {
         const matchesSearch = shop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             shop.owner?.firstname?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === 'All Statuses' ||
@@ -623,7 +627,7 @@ const ShopsView = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                 <h2 className="text-3xl font-bold text-gray-800">Shop Management</h2>
                 {/* <button
-                    onClick={() => router.push('/adminDashboard/shops/addShop')}
+                    onClick={() => router.push('/adminDashboard/shopsData/addShop')}
                     className="mt-4 sm:mt-0 bg-orange-600 text-white px-5 py-2 rounded-xl font-semibold shadow-md hover:bg-orange-700 transition duration-200"
                 >
                     + Add New Shop
@@ -663,7 +667,7 @@ const ShopsView = () => {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Products</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Verified</th>
+                            {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Verified</th> */}
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
@@ -691,13 +695,13 @@ const ShopsView = () => {
                                         {shop.status}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                {/* <td className="px-6 py-4 whitespace-nowrap text-sm">
                                     {shop.verified ? (
                                         <Check className="w-5 h-5 text-green-500" />
                                     ) : (
                                         <XCircle className="w-5 h-5 text-red-400" />
                                     )}
-                                </td>
+                                </td> */}
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <button
                                         onClick={() => handleEditClick(shop)}
@@ -705,7 +709,7 @@ const ShopsView = () => {
                                     >
                                         Edit
                                     </button>
-                                    <button className="text-red-600 hover:text-red-900 transition duration-150">Delete</button>
+                                    {/* <button className="text-red-600 hover:text-red-900 transition duration-150">Delete</button> */}
                                     <button onClick={() => handleViewClick(shop)} className="ml-3 text-green-600 hover:text-green-900 transition duration-150">View</button>
                                 </td>
                             </tr>
