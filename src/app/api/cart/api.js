@@ -22,7 +22,10 @@ class Cart {
         return response.data;
     }
 
-
+    async getUserCart(userId) {
+        const response = await instance.get(`/cart/with/items/${userId}`);
+        return response.data;
+    }
 }
 
 export default new Cart();

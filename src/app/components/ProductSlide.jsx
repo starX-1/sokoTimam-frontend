@@ -1,32 +1,99 @@
 'use client'
-import { ChevronLeft, ChevronRight, Package, Smartphone, Tv, Home, ShoppingBag, Gamepad2, ShoppingCart, Baby, Grid3x3 } from "lucide-react";
+import {
+    ChevronLeft, ChevronRight, Package, Smartphone, Tv, Home,
+    ShoppingBag, Gamepad2, ShoppingCart, Baby, Grid3x3, Truck,
+    Shirt, Watch, Zap, Cookie, Luggage, Factory, Gem // Added more icons for better mapping
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import Products from '../api/products/api';
 import { useRouter } from "next/navigation";
-// import
+import Categories from "../api/categories/api";
+
+// --- 1. ICON MAPPING LOGIC ---
+const categoryIconMap = {
+    // Exact Matches (for general platform-wide categories)
+    "Official Stores": Factory,
+    "Supermarket": ShoppingCart,
+    "Baby Products": Baby,
+    "Other categories": Grid3x3,
+
+    // Keyword Matches (Case-insensitive check for shop-specific names)
+    "phone": Smartphone,
+    "tablet": Smartphone,
+    "tv": Tv,
+    "audio": Tv,
+    "appliance": Home,
+    "home": Home,
+    "office": Home,
+    "beauty": ShoppingBag,
+    "health": ShoppingBag,
+    "fashion": Shirt,
+    "shoe": Shirt,
+    "watch": Watch,
+    "game": Gamepad2,
+    "computer": Gamepad2,
+    "electronic": Zap,
+    "flour": Cookie,
+    "luggage": Luggage,
+    "jewelry": Gem,
+    "jewellery": Gem,
+    "food": Cookie
+};
+
+const getCategoryIcon = (categoryName) => {
+    if (!categoryName) return Grid3x3;
+
+    const nameLower = categoryName.toLowerCase();
+
+    // 1. Check for Exact Matches (Highest Priority)
+    if (categoryIconMap[categoryName]) {
+        return categoryIconMap[categoryName];
+    }
+
+    // 2. Check for Keyword Matches (Lower Priority)
+    for (const keyword in categoryIconMap) {
+        if (nameLower.includes(keyword)) {
+            return categoryIconMap[keyword];
+        }
+    }
+
+    // 3. Default Fallback
+    return Grid3x3;
+};
+// ----------------------------------------
 
 const ProductCarousel = () => {
     const [slides, setSlides] = useState([]);
     const router = useRouter();
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [fetchedCategories, setFetchedCategories] = useState([]);
 
-    // Categories
-    const categories = [
-        { icon: Package, name: "Official Stores" },
-        { icon: Smartphone, name: "Phones & Tablets" },
-        { icon: Tv, name: "TVs & Audio" },
-        { icon: Home, name: "Appliances" },
-        { icon: ShoppingBag, name: "Health & Beauty" },
-        { icon: Home, name: "Home & Office" },
-        { icon: ShoppingBag, name: "Fashion" },
-        { icon: Gamepad2, name: "Computing" },
-        { icon: Gamepad2, name: "Gaming" },
-        { icon: ShoppingCart, name: "Supermarket" },
-        { icon: Baby, name: "Baby Products" },
-        { icon: Grid3x3, name: "Other categories" }
-    ];
+    // The static `categories` array is now redundant and can be removed, 
+    // or kept as a fallback/initial data set if needed. I've commented it out.
+    // const categories = [ ... ];
 
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await Categories.getCategories();
+
+                // --- 2. FORMATTING FETCHED CATEGORIES ---
+                const formattedCategories = response.categories.map(cat => ({
+                    icon: getCategoryIcon(cat.name),
+                    name: cat.name,
+                    id: cat.id,
+                    // You can add logic here to filter for parentId === null if you only want top-level
+                }));
+
+                setFetchedCategories(formattedCategories);
+            } catch (error) {
+                console.error("Error fetching categories:", error);
+            }
+        };
+
+        fetchCategories();
+    }, []);
     // Adverts
     const adverts = [
         {
@@ -99,6 +166,10 @@ const ProductCarousel = () => {
     const handleProductClick = (productId) => {
         router.push(`/Customer/product/${productId}`);
     };
+    const handleCategoryClick = (categoryId) => {
+        router.push(`/Customer/category/${categoryId}`);
+    };
+
 
     return (
         <div className="max-w-7xl mx-auto my-6 px-4">
@@ -107,11 +178,14 @@ const ProductCarousel = () => {
                 {/* LEFT COLUMN - Categories */}
                 <div className="hidden lg:block col-span-2 bg-white rounded-lg shadow-md overflow-hidden h-full">
                     <nav className="divide-y divide-gray-100 h-full">
-                        {categories.map((category, index) => {
+                        {/* 3. USING THE MAPPED fetchedCategories STATE */}
+                        {fetchedCategories.map((category, index) => {
                             const Icon = category.icon;
                             return (
                                 <button
-                                    key={index}
+                                    // Using category ID for the key is better if available, fallback to index
+                                    onClick={() => handleCategoryClick(category.id || index)}
+                                    key={category.id || index}
                                     className="w-full px-3 py-2 flex items-center space-x-2 hover:bg-orange-50 transition text-left text-sm"
                                 >
                                     <Icon className="w-4 h-4 text-orange-600" />
@@ -254,16 +328,25 @@ const ProductCarousel = () => {
                     ))}
 
                     {/* Date/Time Widget */}
-                    <div className="flex-1 bg-black text-white rounded-lg p-4 shadow-md flex flex-col justify-center">
-                        <div className="text-center">
-                            <div className="text-lg font-bold mb-1">If you order now,</div>
-                            <div className="text-xl font-bold text-orange-500">delivery in one day within Nairobi</div>
+                    <div className="flex flex-col bg-black text-white rounded-lg p-4 shadow-md flex items-center justify-center gap-3">
+
+                        {/* Truck Icon Container with Animation Class */}
+                        <div className="w-8 h-8 flex items-center justify-center animate-truck-slide">
+                            <Truck className="w-6 h-6 text-orange-500 fill-orange-500" />
+                        </div>
+
+                        {/* Delivery Text */}
+                        <div className="flex flex-col justify-center">
+                            <div className="text-sm font-bold mb-1">If you order now,</div>
+                            <div className="text-base font-bold text-orange-500">delivery in one day within Nairobi</div>
                         </div>
                     </div>
                 </div>
 
             </div>
         </div>
+        // styles 
+
     );
 };
 

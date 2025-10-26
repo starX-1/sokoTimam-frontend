@@ -24,3 +24,23 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes truck-slide {
+  0% {
+    transform: translateX(0);
+  }
+
+  50% {
+    /* Move 90% of the container width to the right */
+    transform: translateX(90%);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-truck-slide {
+  /* You can increase the duration for a smoother, slower effect */
+  animation: truck-slide 4s infinite ease-in-out;
+}
