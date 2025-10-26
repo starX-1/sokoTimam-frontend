@@ -114,10 +114,10 @@ const Header = () => {
                 <div className="flex items-center space-x-3 sm:space-x-6 flex-shrink-0 text-sm">
 
                     {/* Cart & Login (Ensure icons are consistent size) */}
-                    <Link href={'/cart'} className="flex items-center space-x-1 hover:text-orange-600 text-gray-700 transition">
+                    <button onClick={()=>router.push('/Customer/cart')} className="flex items-center space-x-1 hover:text-orange-600 text-gray-700 transition">
                         <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
                         <span className="hidden sm:inline font-medium">Cart | 0</span>
-                    </Link>
+                    </button>
                     {
                         logedInUser ? (
                             <Link href={'/profile'} className="flex items-center space-x-1 hover:text-orange-600 text-gray-700 transition">

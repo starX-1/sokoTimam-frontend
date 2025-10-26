@@ -1,20 +1,25 @@
 'use client'
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Products from '../../../api/products/api';
 import Header from '../../../components/header'
 import Footer from '../../../components/Footer'
+import Cart from '../../../../app/api/cart/api'
 import { ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Star, Minus, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { getSession } from 'next-auth/react';
+import { toast } from 'react-toastify';
 
 const ProductDetailPage = () => {
     const params = useParams();
     const productId = params?.id;
-    
+    const [loginModalOpen, setLoginMOdalOpen] = useState(false);
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [isFavorite, setIsFavorite] = useState(false);
+    const router = useRouter();
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -32,6 +37,19 @@ const ProductDetailPage = () => {
             fetchProduct();
         }
     }, [productId]);
+    // useefetct to fetch user from session
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const session = await getSession();
+                setUser(session?.user || null);
+            } catch (error) {
+                console.error("Error fetching user:", error);
+            }
+        };
+
+        fetchUser();
+    }, []);
 
     const handleQuantityChange = (action) => {
         if (action === 'increase' && quantity < product.stock) {
@@ -46,16 +64,21 @@ const ProductDetailPage = () => {
     };
 
     const handleNextImage = () => {
-        setSelectedImage((prev) => 
+        setSelectedImage((prev) =>
             prev === product.images.length - 1 ? 0 : prev + 1
         );
     };
 
     const handlePrevImage = () => {
-        setSelectedImage((prev) => 
+        setSelectedImage((prev) =>
             prev === 0 ? product.images.length - 1 : prev - 1
         );
     };
+
+    const handleLoginRedirection = () => {
+        setLoginMOdalOpen(false);
+        router.push("/login");
+    }
 
     if (loading) {
         return (
@@ -77,6 +100,53 @@ const ProductDetailPage = () => {
             </div>
         );
     }
+    const loginModal = () => {
+        return (
+            <div>
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                        <h2 className="text-2xl text-gray-800 font-bold mb-4">Please Log In</h2>
+                        <p className="mb-6 text-orange-600">You need to be logged in to add items to your cart.</p>
+                        <div className="flex justify-end gap-4">
+                            <button className="px-2 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400" onClick={() => setLoginMOdalOpen(false)}>Cancel</button>
+                            <button className="px-2 py-1 bg-orange-600 text-white rounded hover:bg-orange-700" onClick={handleLoginRedirection}>Log In</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    const handleAddToCart = async () => {
+        console.log("Adding to cart", product.id, quantity);
+        // if user is null show modal to tell user to login
+        if (!user) {
+            setLoginMOdalOpen(true);
+            return;
+        }
+
+        const data = {
+            userId: user.id,
+            items: [
+                {
+                    productId: product.id,
+                    quantity: quantity
+                }
+            ]
+        }
+        // console.log(data);
+        try {
+            const response = await Cart.addToCart(data);
+            console.log(response);
+            if (response.message === "Cart updated successfully") {
+                toast.success("Cart updated successfully");
+            } else {
+                toast.error("Error adding to cart: ");
+            }
+        } catch (error) {
+            toast.error("Error adding to cart: ");
+        }
+    }
 
     const mainImage = product.images?.[selectedImage]?.imageUrl || 'https://placehold.co/800x800/f0f0f0/333333?text=No+Image';
     const formattedPrice = parseFloat(product.price).toLocaleString();
@@ -84,6 +154,10 @@ const ProductDetailPage = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             <Header />
+
+            {
+                loginModalOpen && loginModal()
+            }
             <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
                 {/* Breadcrumb */}
                 <nav className="mb-6 text-sm text-gray-600">
@@ -99,12 +173,12 @@ const ProductDetailPage = () => {
                     <div className="space-y-4">
                         {/* Main Image Display */}
                         <div className="relative aspect-square bg-gray-100 rounded-2xl overflow-hidden group">
-                            <img 
+                            <img
                                 src={mainImage}
                                 alt={product.name}
                                 className="w-full h-full object-cover"
                             />
-                            
+
                             {/* Image Navigation Arrows */}
                             {product.images?.length > 1 && (
                                 <>
@@ -155,13 +229,12 @@ const ProductDetailPage = () => {
                                     <button
                                         key={image.id}
                                         onClick={() => handleImageSelect(index)}
-                                        className={`aspect-square rounded-lg overflow-hidden border-2 transition ${
-                                            selectedImage === index 
-                                                ? 'border-orange-500 ring-2 ring-orange-200' 
-                                                : 'border-gray-200 hover:border-gray-300'
-                                        }`}
+                                        className={`aspect-square rounded-lg overflow-hidden border-2 transition ${selectedImage === index
+                                            ? 'border-orange-500 ring-2 ring-orange-200'
+                                            : 'border-gray-200 hover:border-gray-300'
+                                            }`}
                                     >
-                                        <img 
+                                        <img
                                             src={image.imageUrl}
                                             alt={`${product.name} view ${index + 1}`}
                                             className="w-full h-full object-cover"
@@ -178,7 +251,7 @@ const ProductDetailPage = () => {
                             <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-3">
                                 {product.name}
                             </h1>
-                            
+
                             {/* Rating */}
                             <div className="flex items-center gap-2 mb-4">
                                 <div className="flex">
@@ -240,20 +313,24 @@ const ProductDetailPage = () => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex gap-4">
+                        <div className="flex flex-col gap-2 md:flex-row md:gap-4">
                             <button
                                 disabled={product.stock === 0}
-                                className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-lg font-semibold text-lg transition shadow-lg ${
-                                    product.stock > 0
-                                        ? 'bg-orange-600 text-white hover:bg-orange-700'
-                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                }`}
+                                onClick={handleAddToCart}
+                                // Added 'md:flex-1' to let the button expand fully in a row on medium screens
+                                className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded font-medium text-xs transition shadow-md md:flex-1 ${product.stock > 0
+                                    ? 'bg-orange-600 text-white hover:bg-orange-700'
+                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    }`}
                             >
-                                <ShoppingCart className="w-5 h-5" />
+                                <ShoppingCart className="w-3 h-3" />
                                 {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
                             </button>
-                            <button className="px-6 py-4 border-2 border-orange-600 text-orange-600 rounded-lg font-semibold hover:bg-orange-50 transition">
-                                Buy Now
+                            <button
+                                // Added 'flex-1' for full width when stacked, and 'md:flex-initial' to shrink it back when in a row
+                                className="flex-1 px-2 py-1 border-2 border-orange-600 text-orange-600 rounded font-medium text-xs hover:bg-orange-50 transition md:flex-initial"
+                            >
+                                💖 Add to Wishlist
                             </button>
                         </div>
 
@@ -299,7 +376,7 @@ const ProductDetailPage = () => {
                             </button>
                         </nav>
                     </div>
-                    
+
                     <div className="prose max-w-none">
                         <p className="text-gray-700 leading-relaxed">
                             {product.description || 'This is a high-quality product designed to meet your needs. Made with premium materials and attention to detail, it offers excellent value for money.'}
