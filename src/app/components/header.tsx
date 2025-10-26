@@ -170,7 +170,7 @@ const Header = () => {
             {/* 4. Secondary Navigation Bar (Hidden on mobile, visible on tablet/desktop) */}
             <div className="hidden sm:flex max-w-7xl mx-auto px-4 py-2 items-center space-x-6 border-t border-gray-100">
 
-                {/* Categories Dropdown Container (Relative positioning for the absolute menu) */}
+                {/* Categories Dropdown Container (Relative positioning for the absolute menu)
                 <div className="relative z-40">
                     <button
                         className={`text-white p-2 rounded-xl flex items-center space-x-2 cursor-pointer transition duration-150 shadow-md ${isCategoriesOpen ? 'bg-orange-700' : 'bg-orange-600 hover:bg-orange-700'}`}
@@ -184,7 +184,7 @@ const Header = () => {
                     </button>
 
                     {/* Dropdown Content */}
-                    {isCategoriesOpen && (
+                    {/* {isCategoriesOpen && (
                         <div
                             id="category-dropdown"
                             className="absolute left-0 mt-3 w-64 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden animate-fade-in"
@@ -204,16 +204,16 @@ const Header = () => {
                                 View All Categories &rarr;
                             </a>
                         </div>
-                    )}
-                </div>
+                    )} */}
+                {/* </div> */} 
 
                 {/* Secondary Links (Visible on Tablet/Desktop) */}
-                <nav className='flex space-x-4 sm:space-x-6 text-sm font-medium'>
+                {/* <nav className='flex space-x-4 sm:space-x-6 text-sm font-medium'>
                     <a href="#" className="text-gray-700 hover:text-orange-600 transition duration-150">New Arrivals</a>
                     <a href="#" className="text-gray-700 hover:text-orange-600 transition duration-150">Best Sellers</a>
                     <a href="#" className="text-gray-700 hover:text-orange-600 transition duration-150">Sale</a>
                     <a href="#" className="text-gray-700 hover:text-orange-600 transition duration-150">Gift Ideas</a>
-                </nav>
+                </nav> */}
             </div>
 
             {/* 5. Full-Screen Mobile Menu Dropdown (Visible only on sm screens) */}

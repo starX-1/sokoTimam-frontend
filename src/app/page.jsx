@@ -16,22 +16,7 @@ const FeaturedProduct = () => (
       </div>
 
       {/* Info Boxes below product banner */}
-      <div className="flex justify-around items-center bg-orange-950 text-white py-3 my-4 rounded">
-        <div className="flex items-center space-x-2 ">
-          <Check className="w-5 h-5" />
-          <span>Join us:</span>
-        </div>
-        <span className="text-lg">|</span>
-        <div className="flex items-center space-x-2">
-          <Check className="w-5 h-5" />
-          <span>Customer Care Service:</span>
-        </div>
-        <span className="text-lg">|</span>
-        <div className="flex items-center space-x-2">
-          <Check className="w-5 h-5" />
-          <span>Privacy Policy:</span>
-        </div>
-      </div>
+
     </div>
   </section>
 );
@@ -101,8 +86,24 @@ export default function SokoTiMamiPage() {
       <Header />
       <main>
 
-        <DealsOfTheWeek />
         <FeaturedProduct />
+        <DealsOfTheWeek />
+        <div className="flex justify-around items-center bg-orange-950 text-white py-3 my-4 rounded">
+          <div className="flex items-center space-x-2 ">
+            <Check className="w-5 h-5" />
+            <span>Join us:</span>
+          </div>
+          <span className="text-lg">|</span>
+          <div className="flex items-center space-x-2">
+            <Check className="w-5 h-5" />
+            <span>Customer Care Service:</span>
+          </div>
+          <span className="text-lg">|</span>
+          <div className="flex items-center space-x-2">
+            <Check className="w-5 h-5" />
+            <span>Privacy Policy:</span>
+          </div>
+        </div>
 
         <NewAndPopular />
 
