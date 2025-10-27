@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Categories from '../../api/categories/api'
 import { getSession } from "next-auth/react";
 import { toast } from "react-toastify";
+import Shops from "../../api/shop/api";
 
 // --- Component: Create Category Modal ---
 
@@ -14,9 +15,11 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
     const [name, setName] = useState('');
     // Use 'null' to represent a root category (no parent)
     const [parentId, setParentId] = useState('');
+    const [shopId, setShopId] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [parentCategories, setParentCategories] = useState([]);
     const [adminSession, setAdminSession] = useState(null);
+    const [shops, setShops] = useState([]);
 
     // Reset state when the modal opens/closes
     useEffect(() => {
@@ -42,6 +45,21 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
         fetchParentCategories();
     }, []);
 
+    // fetch all the shops to get shop ids
+    useEffect(() => {
+        const fetchShops = async () => {
+            try {
+                const session = await getSession();
+                const response = await Shops.getAllShops(session.user.accessToken);
+                setShops(response.shops);
+            } catch (error) {
+                console.error("Failed to fetch admin session:", error);
+            }
+        };
+
+        fetchShops();
+    }, []);
+
     console.log('Parent Categories:', parentCategories);
 
 
@@ -54,7 +72,7 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
         // In a real application, you'd call an API here, like:
         try {
             const newCategory = { name, parentId: parentIdValue };
-            await Categories.createCategory(newCategory, adminSession.user.accessToken);
+            await Categories.createCategory({ ...newCategory, shopId: shopId }, adminSession.user.accessToken);
             // You would then trigger a re-fetch of the category list in CategoriesView
             onClose(true); // Close and signify a successful action
         } catch (error) {
@@ -64,10 +82,10 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
         }
 
         // Mock success for demonstration
-        console.log(`Submitting new category: Name='${name}', Parent ID=${parentIdValue}`);
+        console.log(`Submitting new category: Name='${name}'`);
         // await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
         setIsSaving(false);
-        toast.success(`Category/Subcategory '${name}' created! (Parent ID: ${parentIdValue})`);
+        toast.success(`Category/Subcategory '${name}' created!`);
         onClose(true); // Close and signify a successful action, which would trigger a data refresh
     };
 
@@ -94,6 +112,27 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="mt-4 space-y-5">
+                    {/* Shop Dropdown */}
+                    <div>
+                        <label htmlFor="shop" className="block text-sm font-medium text-gray-700 mb-1">
+                            Shop <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            id="shop"
+                            value={shopId}
+                            onChange={(e) => setShopId(e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-orange-500 text-orange-500 focus:outline-none focus:border-orange-500 transition duration-150"
+                            disabled={isSaving}
+                        >
+                            <option value="">-- Select Shop --</option>
+                            {shops.map((shop) => (
+                                <option key={shop.id} value={shop.id}>
+                                    {shop.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
                     {/* Category Name Input */}
                     <div>
                         <label htmlFor="category-name" className="block text-sm font-medium text-gray-700 mb-1">

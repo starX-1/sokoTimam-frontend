@@ -88,7 +88,7 @@ export default function SokoTiMamiPage() {
 
         <FeaturedProduct />
         <DealsOfTheWeek />
-        <div className="flex justify-around items-center bg-orange-950 text-white py-3 my-4 rounded">
+        {/* <div className="flex justify-around items-center bg-orange-950 text-white py-3 my-4 rounded">
           <div className="flex items-center space-x-2 ">
             <Check className="w-5 h-5" />
             <span>Join us:</span>
@@ -103,7 +103,7 @@ export default function SokoTiMamiPage() {
             <Check className="w-5 h-5" />
             <span>Privacy Policy:</span>
           </div>
-        </div>
+        </div> */}
 
         <NewAndPopular />
 

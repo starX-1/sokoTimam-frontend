@@ -73,7 +73,7 @@ const NewAndPopular = () => {
     };
 
     return (
-        <section className="bg-gradient-to-br  from-orange-50/30 via-orange-50/20 to-white mt-5 rounded rounded-lg py-8 px-4 sm:px-6 lg:px-8 border-b-8 border-gray-100">
+        <section className="bg-gradient-to-br  from-orange-50/30 via-orange-50/20 to-white rounded rounded-lg py-8 px-4 sm:px-6 lg:px-8 border-b-8 border-gray-100">
             <div className="max-w-7xl mx-auto">
                 {/* Section Header */}
                 <div className="flex items-center justify-between mb-6">
