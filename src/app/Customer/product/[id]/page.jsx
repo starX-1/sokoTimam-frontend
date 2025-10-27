@@ -172,51 +172,61 @@ const ProductDetailPage = () => {
                     {/* Left Column - Images */}
                     <div className="space-y-4">
                         {/* Main Image Display */}
-                        <div className="relative aspect-square bg-gray-100 rounded-2xl overflow-hidden group">
+                        {/* The container block that wraps the main image */}
+                        <div
+                            className="relative aspect-square bg-gray-100 rounded-2xl overflow-hidden group max-w-xl mx-auto lg:max-w-none lg:mx-0 flex items-center justify-center"
+                        >
                             <img
                                 src={mainImage}
                                 alt={product.name}
-                                className="w-full h-full object-cover"
+
+                                /* * This ensures the image element is free to size itself based on 
+                                 * object-contain, and the parent flex container centers it. 
+                                 * We do NOT want w-full h-full here, as that would force the image 
+                                 * element to fill the entire space, potentially hiding the object-contain effect.
+                                */
+                                className="object-contain"
                             />
 
+                            {/* All other elements remain unchanged, but are positioned absolutely over the center. */}
                             {/* Image Navigation Arrows */}
                             {product.images?.length > 1 && (
                                 <>
                                     <button
                                         onClick={handlePrevImage}
-                                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                                     >
-                                        <ChevronLeft className="w-5 h-5 text-gray-800" />
+                                        <ChevronLeft className="w-4 h-4 text-gray-800" />
                                     </button>
                                     <button
                                         onClick={handleNextImage}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                                     >
-                                        <ChevronRight className="w-5 h-5 text-gray-800" />
+                                        <ChevronRight className="w-4 h-4 text-gray-800" />
                                     </button>
                                 </>
                             )}
 
-                            {/* Favorite & Share Buttons */}
-                            <div className="absolute top-4 right-4 flex gap-2">
+                            {/* Favorite & Share Buttons (Reduced size) */}
+                            <div className="absolute top-3 right-3 flex gap-1.5">
                                 <button
                                     onClick={() => setIsFavorite(!isFavorite)}
-                                    className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition"
+                                    className="bg-white/90 hover:bg-white p-1.5 rounded-full shadow-md transition"
                                 >
-                                    <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700'}`} />
+                                    <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700'}`} />
                                 </button>
-                                <button className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition">
-                                    <Share2 className="w-5 h-5 text-gray-700" />
+                                <button className="bg-white/90 hover:bg-white p-1.5 rounded-full shadow-md transition">
+                                    <Share2 className="w-4 h-4 text-gray-700" />
                                 </button>
                             </div>
 
-                            {/* Stock Badge */}
+                            {/* Stock Badge (Reduced size) */}
                             {product.stock > 0 ? (
-                                <div className="absolute top-4 left-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                                <div className="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                                     In Stock
                                 </div>
                             ) : (
-                                <div className="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                                <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                                     Out of Stock
                                 </div>
                             )}

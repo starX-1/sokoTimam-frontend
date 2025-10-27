@@ -1,5 +1,5 @@
 const Footer = () => (
-    <footer className="bg-orange-950 text-white mt-8 pt-10 pb-4">
+    <footer className="bg-orange-700 text-white mt-8 pt-10 pb-4">
         <div className="max-w-7xl mx-auto px-4">
             {/* Footer Links Grid */}
             <div className="grid grid-cols-4 gap-8 pb-10 border-b border-orange-800">

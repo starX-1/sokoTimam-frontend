@@ -28,7 +28,7 @@ const CategoryProductsPage = () => {
 
                 // 2. Fetch the category name for the title
                 const categoryResponse = await Categories.getCategoryById(categoryId);
-                Console.log('Fetched category:', categoryResponse);
+                console.log('Fetched category:', categoryResponse);
                 setCategoryName(categoryResponse.name || 'Products');
 
                 setLoading(false);
