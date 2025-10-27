@@ -8,7 +8,7 @@ const navItems = [
     { name: 'Products', icon: Package, href: '/sellerDashboard/products' },
     // { name: 'Users', icon: Users, href: '/sellerDashboard/users' },
     // { name: 'Analytics', icon: BarChart3, href: '#/analytics' },
-    { name: 'Categories', icon: ChartBar, href: '/sellerDashboard/categories' },
+    // { name: 'Categories', icon: ChartBar, href: '/sellerDashboard/categories' },
     // { name: 'Promotions', icon: Tag, href: '#/promotions' },
 ];
 

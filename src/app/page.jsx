@@ -82,9 +82,9 @@ const FeaturedProduct = () => (
 
 export default function SokoTiMamiPage() {
   return (
-    <div className="min-h-screen bg-gray-100 font-sans">
+    <div className="mx-auto min-h-screen bg-gray-100 font-sans">
       <Header />
-      <main>
+      <main className='max-w-6xl mx-auto'>
 
         <FeaturedProduct />
         <DealsOfTheWeek />

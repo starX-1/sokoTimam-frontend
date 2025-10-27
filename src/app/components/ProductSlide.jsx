@@ -311,37 +311,46 @@ const ProductCarousel = () => {
                         </section>
                     )}
                 </div>
-
-                {/* RIGHT COLUMN - Adverts */}
-                <div className="lg:col-span-3 h-full flex flex-col gap-3">
-                    {adverts.map((advert) => (
-                        <div
-                            key={advert.id}
-                            className={`flex-1 ${advert.bgColor} text-white rounded-lg p-4 shadow-md hover:shadow-lg transition transform hover:scale-105 text-left flex flex-col justify-center`}
-                        >
-                            <div className="flex items-center justify-between mb-1">
-                                <span className="text-2xl">{advert.icon}</span>
-                            </div>
-                            <h3 className="font-bold text-base mb-1">{advert.title}</h3>
-                            <p className="text-xs opacity-90">{advert.subtitle}</p>
-                        </div>
-                    ))}
-
-                    {/* Date/Time Widget */}
-                    <div className="flex flex-col bg-black text-white rounded-lg p-4 shadow-md flex items-center justify-center gap-3">
-
-                        {/* Truck Icon Container with Animation Class */}
-                        <div className="w-8 h-8 flex items-center justify-center animate-truck-slide">
-                            <Truck className="w-6 h-6 text-orange-500 fill-orange-500" />
-                        </div>
-
-                        {/* Delivery Text */}
-                        <div className="flex flex-col justify-center">
-                            <div className="text-sm font-bold mb-1">If you order now,</div>
-                            <div className="text-base font-bold text-orange-500">delivery in one day within Nairobi</div>
-                        </div>
-                    </div>
+                {/* RIGHT COLUMN - Adverts (Matching the provided image) */}
+<div className="lg:col-span-3 h-full flex flex-col gap-2">
+    
+    {/* Main container for the adverts, now with a single white background */}
+    <div className="bg-white rounded-lg shadow-md p-4 flex flex-col gap-3">
+        {adverts.map((advert) => (
+            <div
+                key={advert.id}
+                // Each advert item is now a flex container, vertically centered, no background color here
+                className="flex flex-row items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
+            >
+                {/* ICON */}
+                <div className="flex-shrink-0">
+                    {/* Render the actual icon component/SVG directly from advert.icon */}
+                    {advert.icon} 
                 </div>
+                
+                {/* TEXT CONTENT */}
+                <div className="flex flex-col text-left">
+                    <h3 className="font-semibold text-gray-800 text-sm leading-tight">{advert.title}</h3> 
+                    <p className="text-gray-600 text-xs leading-tight">{advert.subtitle}</p>
+                </div>
+            </div>
+        ))}
+    </div>
+
+    {/* Date/Time Widget - Now a separate, simpler white card below the main group */}
+    {/* Keeping it separate gives more flexibility if the client wants it to stand out a bit */}
+    <div className="flex flex-col bg-white border border-gray-200 text-gray-800 rounded-lg p-3 shadow-sm flex items-center justify-center gap-2 mt-2">
+        {/* Truck Icon Container */}
+        <div className="w-6 h-6 flex items-center justify-center animate-truck-slide flex-shrink-0">
+            <Truck className="w-5 h-5 text-orange-500 fill-orange-500" />
+        </div>
+        {/* Delivery Text - Centered and smaller */}
+        <div className="flex flex-col justify-center text-center">
+            <div className="text-xs font-medium mb-0.5 leading-tight">If you order now,</div>
+            <div className="text-sm font-bold text-orange-600 leading-tight">delivery in one day within Nairobi</div>
+        </div>
+    </div>
+</div>
 
             </div>
         </div>
