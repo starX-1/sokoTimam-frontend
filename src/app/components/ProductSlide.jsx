@@ -172,190 +172,314 @@ const ProductCarousel = () => {
 
 
     return (
-        <div className="max-w-7xl mx-auto my-6 px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
+        <div className="mx-auto mt-3 px-4 overflow-x-hidden">
 
-                {/* LEFT COLUMN - Categories */}
-                <div className="hidden lg:block col-span-2 bg-white rounded-lg shadow-md overflow-hidden h-full">
-                    <nav className="divide-y divide-gray-100 h-full">
-                        {/* 3. USING THE MAPPED fetchedCategories STATE */}
-                        {fetchedCategories.map((category, index) => {
+            {/* MOBILE LAYOUT */}
+            {/* MOBILE LAYOUT - IMAGE ON RIGHT, DETAILS ON LEFT */}
+            <div className="lg:hidden">
+                {loading ? (
+                    <div className="bg-gray-100 rounded-xl shadow-lg h-full min-h-[280px] flex items-center justify-center">
+                        <p className="text-gray-600 text-base">Loading featured products...</p>
+                    </div>
+                ) : slides.length === 0 ? null : (
+                    <section className="relative overflow-hidden rounded-xl shadow-lg">
+                        <div className="flex transition-transform duration-500 ease-in-out"
+                            style={{ transform: `translateX(-${currentSlideIndex * 100}%)` }}>
+
+                            {slides.map((slide) => {
+                                const mainImage = slide.images?.find(img => img.isMain)?.imageUrl
+                                    || slide.images?.[0]?.imageUrl
+                                    || 'https://placehold.co/800x400/f0f0f0/333333?text=Product+Image';
+
+                                const formattedPrice = `KSh ${parseFloat(slide.price).toLocaleString()}`;
+
+                                return (
+                                    <div key={slide.id} className="flex-shrink-0 w-full">
+                                        <div className="relative flex flex-row h-48 sm:h-56">
+
+                                            {/* Product Details - LEFT */}
+                                            <div className="w-full sm:w-1/2 p-3 bg-gray-50 flex flex-col justify-between">
+
+                                                <span className="text-xs font-semibold text-orange-600 mb-0.5 uppercase tracking-wider">Featured Deal</span>
+                                                <h3 className="text-sm sm:text-base font-bold text-orange-950 mb-0.5 line-clamp-2">{slide.name}</h3>
+
+                                                {slide.description && (
+                                                    <p className="text-gray-600 mb-1 text-xs line-clamp-2">{slide.description}</p>
+                                                )}
+
+                                                {slide.stock > 0 ? (
+                                                    <p className="text-xs text-green-600 font-semibold mb-1">
+                                                        ✓ In Stock ({slide.stock} available)
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-xs text-red-600 font-semibold mb-1">
+                                                        Out of Stock
+                                                    </p>
+                                                )}
+
+                                                <div className="flex items-center space-x-2 mt-1">
+                                                    <span className="text-sm font-bold text-red-600">{formattedPrice}</span>
+                                                    <button
+                                                        onClick={() => handleProductClick(slide.id)}
+                                                        className={`px-3 py-1 rounded-full transition font-semibold text-xs ${slide.stock > 0
+                                                            ? 'bg-orange-500 text-white hover:bg-orange-600'
+                                                            : 'bg-gray-400 text-white cursor-not-allowed'
+                                                            }`}
+                                                        disabled={slide.stock === 0}
+                                                    >
+                                                        {slide.stock > 0 ? 'BUY' : 'SOLD'}
+                                                    </button>
+                                                </div>
+
+                                                <p className="text-xs text-gray-700 border-t pt-1 mt-1">
+                                                    <strong>Offer</strong> - Don't miss!
+                                                </p>
+
+                                            </div>
+
+                                            {/* Product Image - RIGHT */}
+                                            <div className="w-full sm:w-1/2 h-32 sm:h-48">
+                                                <img
+                                                    src={mainImage}
+                                                    alt={slide.name}
+                                                    className="w-full h-full object-cover rounded-r-lg"
+                                                    onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = "https://placehold.co/800x400/f0f0f0/333333?text=Product+Image";
+                                                    }}
+                                                />
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                        </div>
+
+                        {/* Dots for navigation */}
+                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
+                            {slides.map((_, index) => (
+                                <button
+                                    key={index}
+                                    className={`w-2 h-2 rounded-full transition-colors duration-300 ${currentSlideIndex === index
+                                        ? 'bg-orange-600'
+                                        : 'bg-orange-950 bg-opacity-50 hover:bg-opacity-80'
+                                        }`}
+                                    onClick={() => setCurrentSlideIndex(index)}
+                                    aria-label={`Go to slide ${index + 1}`}
+                                />
+                            ))}
+                        </div>
+                    </section>
+                )}
+            </div>
+            {/* MOBILE CATEGORIES - HORIZONTAL SCROLL */}
+            <div className="lg:hidden mt-4">
+                {fetchedCategories.length > 0 ? (
+                    <div className="flex space-x-4 overflow-x-auto pb-2 px-2 w-full">
+                        {fetchedCategories.map((category) => {
                             const Icon = category.icon;
                             return (
                                 <button
-                                    // Using category ID for the key is better if available, fallback to index
-                                    onClick={() => handleCategoryClick(category.id || index)}
-                                    key={category.id || index}
-                                    className="w-full px-3 py-2 flex items-center space-x-2 hover:bg-orange-50 transition text-left text-sm"
+                                    key={category.id || category.name}
+                                    onClick={() => handleCategoryClick(category.id)}
+                                    className="flex flex-col items-center justify-center flex-shrink-0 w-16"
                                 >
-                                    <Icon className="w-4 h-4 text-orange-600" />
-                                    <span className="text-gray-700">{category.name}</span>
+                                    <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center mb-1">
+                                        <Icon className="w-5 h-5 text-orange-600" />
+                                    </div>
+                                    <span className="text-xs text-gray-700 text-center leading-tight max-w-full line-clamp-2">
+                                        {category.name}
+                                    </span>
                                 </button>
                             );
                         })}
-                    </nav>
-                </div>
+                    </div>
+                ) : (
+                    <div className="h-12 flex items-center justify-center text-gray-500 text-sm">
+                        Loading categories...
+                    </div>
+                )}
+            </div>
 
-                {/* CENTER COLUMN - Carousel */}
-                <div className="lg:col-span-7 h-full">
-                    {loading ? (
-                        <div className="bg-gray-100 rounded-xl shadow-lg h-full min-h-[280px] flex items-center justify-center">
-                            <p className="text-gray-600 text-base">Loading featured products...</p>
-                        </div>
-                    ) : slides.length === 0 ? null : (
-                        <section className="relative overflow-hidden rounded-xl shadow-lg h-full">
-                            <div className="flex transition-transform duration-500 ease-in-out h-full"
-                                style={{ transform: `translateX(-${currentSlideIndex * 100}%)` }}>
+            {/* DESKTOP LAYOUT */}
+            <div className="hidden lg:block">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
 
-                                {slides.map((slide) => {
-                                    // Get main image
-                                    const mainImage = slide.images?.find(img => img.isMain)?.imageUrl
-                                        || slide.images?.[0]?.imageUrl
-                                        || 'https://placehold.co/800x400/f0f0f0/333333?text=Product+Image';
+                    {/* LEFT COLUMN - Categories */}
+                    <div className="hidden lg:block col-span-2 bg-white rounded-lg shadow-md overflow-hidden h-full">
+                        <nav className="divide-y divide-gray-100 h-full">
+                            {/*
+            1. Slice the array to get only the first 7 categories.
+            2. Use a local state or a different handler if "More" button needs a specific action,
+               or if it simply expands the list. For this example, we assume `handleCategoryClick` 
+               is the primary action and we'll create a simple placeholder for the "More" button.
+        */}
+                            {fetchedCategories.slice(0, 7).map((category, index) => {
+                                const Icon = category.icon;
+                                return (
+                                    <button
+                                        onClick={() => handleCategoryClick(category.id || index)}
+                                        key={category.id || index}
+                                        className="w-full px-3 py-2 flex items-center space-x-2 hover:bg-orange-50 transition text-left text-sm"
+                                    >
+                                        <Icon className="w-4 h-4 text-orange-600" />
+                                        <span className="text-gray-700">{category.name}</span>
+                                    </button>
+                                );
+                            })}
 
-                                    // Format price
-                                    const formattedPrice = `KSh ${parseFloat(slide.price).toLocaleString()}`;
+                            {/* Conditional "More" Button */}
+                            {fetchedCategories.length > 7 && (
+                                <button
+                                    // You'll need a specific handler for the 'More' button, 
+                                    // e.g., to navigate to an all-categories page or expand the list.
+                                    onClick={() => console.log('Handle More Categories Click')}
+                                    className="w-full px-3 py-2 flex items-center justify-center space-x-2 bg-gray-50 hover:bg-orange-100 transition text-left text-sm font-semibold text-orange-600"
+                                >
+                                    {/* A simple icon like an arrow down or ellipses might be nice */}
+                                    <span>View All ({fetchedCategories.length})</span>
+                                </button>
+                            )}
+                        </nav>
+                    </div>
 
-                                    return (
-                                        <div key={slide.id} className="flex-shrink-0 w-full h-full">
-                                            <div className="relative flex flex-col md:flex-row items-stretch h-full">
+                    {/* CENTER COLUMN - Carousel */}
+                    <div className="lg:col-span-7 h-full">
+                        {loading ? (
+                            <div className="bg-gray-100 rounded-xl shadow-lg h-full min-h-[280px] flex items-center justify-center">
+                                <p className="text-gray-600 text-base">Loading featured products...</p>
+                            </div>
+                        ) : slides.length === 0 ? null : (
+                            <section className="relative overflow-hidden rounded-xl shadow-lg h-full">
+                                <div className="flex transition-transform duration-500 ease-in-out h-full"
+                                    style={{ transform: `translateX(-${currentSlideIndex * 100}%)` }}>
 
-                                                {/* Product Details */}
-                                                <div className="w-full md:w-1/2 p-4 sm:p-6 bg-gray-50 flex flex-col justify-center order-2 md:order-1 h-full">
-                                                    <span className="text-xs font-semibold text-orange-600 mb-1 uppercase tracking-widest">Featured Deal</span>
-                                                    <h3 className="text-xl sm:text-2xl font-extrabold text-orange-950 mb-1 line-clamp-2">{slide.name}</h3>
+                                    {slides.map((slide) => {
+                                        const mainImage = slide.images?.find(img => img.isMain)?.imageUrl
+                                            || slide.images?.[0]?.imageUrl
+                                            || 'https://placehold.co/800x400/f0f0f0/333333?text=Product+Image';
+                                        const formattedPrice = `KSh ${parseFloat(slide.price).toLocaleString()}`;
 
-                                                    {slide.description && (
-                                                        <p className="text-gray-600 mb-2 text-sm line-clamp-2">{slide.description}</p>
-                                                    )}
-
-                                                    {slide.stock > 0 ? (
-                                                        <p className="text-xs text-green-600 font-semibold mb-1">
-                                                            ✓ In Stock ({slide.stock} available)
+                                        return (
+                                            <div key={slide.id} className="flex-shrink-0 w-full h-full">
+                                                <div className="relative flex flex-col md:flex-row items-stretch h-full">
+                                                    <div className="w-full md:w-1/2 p-4 sm:p-6 bg-gray-50 flex flex-col justify-center order-2 md:order-1 h-full">
+                                                        <span className="text-xs font-semibold text-orange-600 mb-1 uppercase tracking-widest">Featured Deal</span>
+                                                        <h3 className="text-xl sm:text-2xl font-extrabold text-orange-950 mb-1 line-clamp-2">{slide.name}</h3>
+                                                        {slide.description && (
+                                                            <p className="text-gray-600 mb-2 text-sm line-clamp-2">{slide.description}</p>
+                                                        )}
+                                                        {slide.stock > 0 ? (
+                                                            <p className="text-xs text-green-600 font-semibold mb-1">
+                                                                ✓ In Stock ({slide.stock} available)
+                                                            </p>
+                                                        ) : (
+                                                            <p className="text-xs text-red-600 font-semibold mb-1">
+                                                                Out of Stock
+                                                            </p>
+                                                        )}
+                                                        <div className="flex items-center space-x-4 mb-3">
+                                                            <span className="text-xl font-bold text-red-600">{formattedPrice}</span>
+                                                            <button
+                                                                onClick={() => handleProductClick(slide.id)}
+                                                                className={`px-6 py-2 rounded-full transition font-semibold shadow-lg text-xs ${slide.stock > 0
+                                                                    ? 'bg-orange-500 text-white hover:bg-orange-600'
+                                                                    : 'bg-gray-400 text-white cursor-not-allowed'
+                                                                    }`}
+                                                                disabled={slide.stock === 0}
+                                                            >
+                                                                {slide.stock > 0 ? 'BUY NOW' : 'SOLD OUT'}
+                                                            </button>
+                                                        </div>
+                                                        <p className="text-xs text-gray-700 border-t pt-2 mt-auto">
+                                                            <strong>Limited Time Offer</strong> - Don't miss out!
                                                         </p>
-                                                    ) : (
-                                                        <p className="text-xs text-red-600 font-semibold mb-1">
-                                                            Out of Stock
-                                                        </p>
-                                                    )}
-
-                                                    <div className="flex items-center space-x-4 mb-3">
-                                                        <span className="text-xl font-bold text-red-600">{formattedPrice}</span>
-                                                        <button
-                                                            onClick={() => handleProductClick(slide.id)}
-                                                            className={`px-6 py-2 rounded-full transition font-semibold shadow-lg text-xs ${slide.stock > 0
-                                                                ? 'bg-orange-500 text-white hover:bg-orange-600'
-                                                                : 'bg-gray-400 text-white cursor-not-allowed'
-                                                                }`}
-                                                            disabled={slide.stock === 0}
-                                                        >
-                                                            {slide.stock > 0 ? 'BUY NOW' : 'SOLD OUT'}
-                                                        </button>
                                                     </div>
-
-                                                    <p className="text-xs text-gray-700 border-t pt-2 mt-auto">
-                                                        <strong className="text-sm">Limited Time Offer</strong> - Don't miss out!
-                                                    </p>
-                                                </div>
-
-                                                {/* Product Image */}
-                                                <div className="w-full md:w-1/2 h-48 md:h-full order-1 md:order-2">
-                                                    <img
-                                                        src={mainImage}
-                                                        alt={slide.name}
-                                                        className="w-full h-full object-cover"
-                                                        onError={(e) => {
-                                                            e.target.onerror = null;
-                                                            e.target.src = "https://placehold.co/800x400/f0f0f0/333333?text=Product+Image";
-                                                        }}
-                                                    />
+                                                    <div className="w-full md:w-1/2 h-48 md:h-full order-1 md:order-2 **flex items-center justify-center**">
+                                                        <img
+                                                            src={mainImage}
+                                                            alt={slide.name}
+                                                            className="**max-h-full max-w-full object-contain**"
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.src = "https://placehold.co/800x400/f0f0f0/333333?text=Product+Image";
+                                                            }}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                                        );
+                                    })}
 
-                            {/* Left Arrow */}
-                            <button
-                                className="absolute top-1/2 -translate-y-1/2 left-0 z-10 bg-white bg-opacity-70 p-2 rounded-r-full hover:bg-opacity-100 transition shadow-lg hidden md:block"
-                                onClick={goToPrevious}
-                                aria-label="Previous Slide"
-                            >
-                                <ChevronLeft className="w-5 h-5 text-orange-600" />
-                            </button>
-
-                            {/* Right Arrow */}
-                            <button
-                                className="absolute top-1/2 -translate-y-1/2 right-0 z-10 bg-white bg-opacity-70 p-2 rounded-r-full hover:bg-opacity-100 transition shadow-lg hidden md:block"
-                                onClick={goToNext}
-                                aria-label="Next Slide"
-                            >
-                                <ChevronRight className="w-5 h-5 text-orange-600" />
-                            </button>
-
-                            {/* Dots for navigation */}
-                            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
-                                {slides.map((_, index) => (
-                                    <button
-                                        key={index}
-                                        className={`w-2 h-2 rounded-full transition-colors duration-300 ${currentSlideIndex === index
-                                            ? 'bg-orange-600'
-                                            : 'bg-orange-950 bg-opacity-50 hover:bg-opacity-80'
-                                            }`}
-                                        onClick={() => setCurrentSlideIndex(index)}
-                                        aria-label={`Go to slide ${index + 1}`}
-                                    />
-                                ))}
-                            </div>
-                        </section>
-                    )}
-                </div>
-                {/* RIGHT COLUMN - Adverts (Matching the provided image) */}
-                <div className="lg:col-span-3 h-full flex flex-col gap-2">
-
-                    {/* Main container for the adverts, now with a single white background */}
-                    <div className="bg-white rounded-lg shadow-md p-4 flex flex-col gap-3">
-                        {adverts.map((advert) => (
-                            <div
-                                key={advert.id}
-                                // Each advert item is now a flex container, vertically centered, no background color here
-                                className="flex flex-row items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
-                            >
-                                {/* ICON */}
-                                <div className="flex-shrink-0">
-                                    {/* Render the actual icon component/SVG directly from advert.icon */}
-                                    {advert.icon}
                                 </div>
 
-                                {/* TEXT CONTENT */}
-                                <div className="flex flex-col text-left">
-                                    <h3 className="font-semibold text-gray-800 text-sm leading-tight">{advert.title}</h3>
-                                    <p className="text-gray-600 text-xs leading-tight">{advert.subtitle}</p>
+                                {/* Arrows */}
+                                <button
+                                    className="absolute top-1/2 -translate-y-1/2 left-0 z-10 bg-white bg-opacity-70 p-2 rounded-r-full hover:bg-opacity-100 transition shadow-lg hidden md:block"
+                                    onClick={goToPrevious}
+                                    aria-label="Previous Slide"
+                                >
+                                    <ChevronLeft className="w-5 h-5 text-orange-600" />
+                                </button>
+                                <button
+                                    className="absolute top-1/2 -translate-y-1/2 right-0 z-10 bg-white bg-opacity-70 p-2 rounded-r-full hover:bg-opacity-100 transition shadow-lg hidden md:block"
+                                    onClick={goToNext}
+                                    aria-label="Next Slide"
+                                >
+                                    <ChevronRight className="w-5 h-5 text-orange-600" />
+                                </button>
+
+                                {/* Dots */}
+                                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
+                                    {slides.map((_, index) => (
+                                        <button
+                                            key={index}
+                                            className={`w-2 h-2 rounded-full transition-colors duration-300 ${currentSlideIndex === index
+                                                ? 'bg-orange-600'
+                                                : 'bg-orange-950 bg-opacity-50 hover:bg-opacity-80'
+                                                }`}
+                                            onClick={() => setCurrentSlideIndex(index)}
+                                            aria-label={`Go to slide ${index + 1}`}
+                                        />
+                                    ))}
                                 </div>
+                            </section>
+                        )}
+                    </div>
+
+                    {/* RIGHT COLUMN - Adverts */}
+                    <div className="lg:col-span-3 h-full flex flex-col gap-2">
+                        <div className="bg-white rounded-lg shadow-md p-4 flex flex-col gap-3">
+                            {adverts.map((advert) => (
+                                <div
+                                    key={advert.id}
+                                    className="flex flex-row items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
+                                >
+                                    <div className="flex-shrink-0">{advert.icon}</div>
+                                    <div className="flex flex-col text-left">
+                                        <h3 className="font-semibold text-gray-800 text-sm leading-tight">{advert.title}</h3>
+                                        <p className="text-gray-600 text-xs leading-tight">{advert.subtitle}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex flex-col bg-white border border-gray-200 text-gray-800 rounded-lg p-3 shadow-sm flex items-center justify-center gap-2 mt-2">
+                            <div className="w-6 h-6 flex items-center justify-center animate-truck-slide flex-shrink-0">
+                                <Truck className="w-5 h-5 text-orange-500 fill-orange-500" />
                             </div>
-                        ))}
+                            <div className="flex flex-col justify-center text-center">
+                                <div className="text-xs font-medium mb-0.5 leading-tight">If you order now,</div>
+                                <div className="text-sm font-bold text-orange-600 leading-tight">delivery in one day within Nairobi</div>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Date/Time Widget - Now a separate, simpler white card below the main group */}
-                    {/* Keeping it separate gives more flexibility if the client wants it to stand out a bit */}
-                    <div className="flex flex-col bg-white border border-gray-200 text-gray-800 rounded-lg p-3 shadow-sm flex items-center justify-center gap-2 mt-2">
-                        {/* Truck Icon Container */}
-                        <div className="w-6 h-6 flex items-center justify-center animate-truck-slide flex-shrink-0">
-                            <Truck className="w-5 h-5 text-orange-500 fill-orange-500" />
-                        </div>
-                        {/* Delivery Text - Centered and smaller */}
-                        <div className="flex flex-col justify-center text-center">
-                            <div className="text-xs font-medium mb-0.5 leading-tight">If you order now,</div>
-                            <div className="text-sm font-bold text-orange-600 leading-tight">delivery in one day within Nairobi</div>
-                        </div>
-                    </div>
                 </div>
-
             </div>
-        </div>
-        // styles 
 
+        </div>
     );
 };
 

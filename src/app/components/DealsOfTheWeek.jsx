@@ -115,7 +115,7 @@ const DealsOfTheWeek = () => {
     console.log(deals);
 
     return (
-        <section className="bg-white mt-5 rounded rounded-lg py-4 px-4 sm:px-6 lg:px-8 border-b-8 border-gray-100">
+        <section className="bg-white mt-1 rounded rounded-lg py-4 px-4 sm:px-6 lg:px-8 border-b-8 border-gray-100">
             <div className="max-w-7xl mx-auto">
                 {/* Flash Sale Header */}
                 <div className="bg-gradient-to-r from-red-600 to-orange-500 rounded-lg px-4 py-3 mb-4 shadow-md">
@@ -145,7 +145,7 @@ const DealsOfTheWeek = () => {
                         <p className="text-gray-600 mt-3 text-sm">Loading deals...</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+                    <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
                         <div className="flex gap-3 sm:gap-4 min-w-max">
                             {deals.map((product) => {
                                 // Get the main image or fallback to first image

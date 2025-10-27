@@ -76,12 +76,12 @@ const NewAndPopular = () => {
         <section className="bg-gradient-to-br  from-orange-50/30 via-orange-50/20 to-white rounded rounded-lg py-8 px-4 sm:px-6 lg:px-8 border-b-8 border-gray-100">
             <div className="max-w-7xl mx-auto">
                 {/* Section Header */}
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between">
                     <div>
                         <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-600 bg-clip-text text-transparent">
                             New & Popular
                         </h2>
-                        <p className="text-sm text-gray-600 mt-1">Trending products just for you</p>
+                        <p className="text-sm text-gray-600">Trending products just for you</p>
                     </div>
                     
                     <button 
@@ -95,7 +95,7 @@ const NewAndPopular = () => {
                 {loading ? (
                     <div className="py-12 text-center">
                         <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-orange-500 border-t-transparent"></div>
-                        <p className="text-gray-600 mt-3 text-sm">Loading products...</p>
+                        <p className="text-gray-600 text-sm">Loading products...</p>
                     </div>
                 ) : products.length === 0 ? (
                     <div className="py-12 text-center">

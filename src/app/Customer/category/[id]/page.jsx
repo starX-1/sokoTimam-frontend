@@ -23,11 +23,12 @@ const CategoryProductsPage = () => {
             try {
                 // 1. Fetch products for the category
                 // Assuming you have an API method to fetch products by category ID
-                const productResponse = await Products.getProductsByCategory(categoryId);
+                const productResponse = await Categories.getProductsByCategory(categoryId);
                 setProducts(productResponse.products || []);
 
                 // 2. Fetch the category name for the title
-                const categoryResponse = await Categories.getCategory(categoryId);
+                const categoryResponse = await Categories.getCategoryById(categoryId);
+                Console.log('Fetched category:', categoryResponse);
                 setCategoryName(categoryResponse.name || 'Products');
 
                 setLoading(false);
@@ -43,7 +44,7 @@ const CategoryProductsPage = () => {
     // Product Card Component (Reused from elsewhere, adapted slightly)
     const ProductCard = ({ product }) => (
         <div
-            className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition cursor-pointer"
+            className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition cursor-pointer "
             onClick={() => router.push(`/Customer/product/${product.id}`)}
         >
             {/* Image */}
@@ -90,7 +91,7 @@ const CategoryProductsPage = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             <Header />
-            <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8 ">
 
                 {/* Breadcrumb / Title */}
                 <div className="mb-8">

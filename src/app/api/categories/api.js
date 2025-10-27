@@ -13,8 +13,8 @@ class Categories {
   }
 
   async createCategory(category, accessToken) {
-    const response = await instance.post("/category", category,{
-      headers:{
+    const response = await instance.post("/category", category, {
+      headers: {
         Authorization: `Bearer ${accessToken}`,
       }
     });
@@ -28,6 +28,10 @@ class Categories {
 
   async deleteCategory(id) {
     const response = await instance.delete(`/categories/${id}`);
+    return response.data;
+  }
+  async getProductsByCategory(categoryId) {
+    const response = await instance.get(`/products/category/${categoryId}`);
     return response.data;
   }
 
