@@ -2,7 +2,7 @@
 import {
     ChevronLeft, ChevronRight, Package, Smartphone, Tv, Home,
     ShoppingBag, Gamepad2, ShoppingCart, Baby, Grid3x3, Truck,
-    Shirt, Watch, Zap, Cookie, Luggage, Factory, Gem // Added more icons for better mapping
+    Shirt, Watch, Zap, Cookie, Luggage, Factory, Gem
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Products from '../api/products/api';
@@ -68,10 +68,8 @@ const ProductCarousel = () => {
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const [fetchedCategories, setFetchedCategories] = useState([]);
-
-    // The static `categories` array is now redundant and can be removed, 
-    // or kept as a fallback/initial data set if needed. I've commented it out.
-    // const categories = [ ... ];
+    const [hoveredCategory, setHoveredCategory] = useState(null);
+    const [childrenCategories, setChildrenCategories] = useState({});
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -94,6 +92,7 @@ const ProductCarousel = () => {
 
         fetchCategories();
     }, []);
+
     // Adverts
     const adverts = [
         {
@@ -166,10 +165,37 @@ const ProductCarousel = () => {
     const handleProductClick = (productId) => {
         router.push(`/Customer/product/${productId}`);
     };
+
     const handleCategoryClick = (categoryId) => {
         router.push(`/Customer/category/${categoryId}`);
     };
 
+    // Fetch children categories when hovering over a parent category
+    const handleCategoryHover = async (categoryId) => {
+        setHoveredCategory(categoryId);
+        
+        // Only fetch if we haven't already fetched children for this category
+        if (!childrenCategories[categoryId]) {
+            try {
+                const response = await Categories.getCategoryChildren(categoryId);
+                console.log(response)
+                setChildrenCategories(prev => ({
+                    ...prev,
+                    [categoryId]: response.category.children || []
+                }));
+            } catch (error) {
+                console.error("Error fetching category children:", error);
+                setChildrenCategories(prev => ({
+                    ...prev,
+                    [categoryId]: []
+                }));
+            }
+        }
+    };
+
+    const handleCategoryLeave = () => {
+        setHoveredCategory(null);
+    };
 
     return (
         <div className="mx-auto mt-3 px-4 overflow-x-hidden">
@@ -274,6 +300,7 @@ const ProductCarousel = () => {
                     </section>
                 )}
             </div>
+
             {/* MOBILE CATEGORIES - HORIZONTAL SCROLL */}
             <div className="lg:hidden mt-4">
                 {fetchedCategories.length > 0 ? (
@@ -308,37 +335,58 @@ const ProductCarousel = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
 
                     {/* LEFT COLUMN - Categories */}
-                    <div className="hidden lg:block col-span-2 bg-white rounded-lg shadow-md overflow-hidden h-full">
+                    <div className="hidden lg:block col-span-2 bg-white rounded-lg shadow-md overflow-visible h-full relative">
                         <nav className="divide-y divide-gray-100 h-full">
-                            {/*
-            1. Slice the array to get only the first 7 categories.
-            2. Use a local state or a different handler if "More" button needs a specific action,
-               or if it simply expands the list. For this example, we assume `handleCategoryClick` 
-               is the primary action and we'll create a simple placeholder for the "More" button.
-        */}
                             {fetchedCategories.slice(0, 7).map((category, index) => {
                                 const Icon = category.icon;
+                                const hasChildren = childrenCategories[category.id]?.length > 0;
+                                
                                 return (
-                                    <button
-                                        onClick={() => handleCategoryClick(category.id || index)}
+                                    <div
                                         key={category.id || index}
-                                        className="w-full px-3 py-2 flex items-center space-x-2 hover:bg-orange-50 transition text-left text-sm"
+                                        className="relative"
+                                        onMouseEnter={() => handleCategoryHover(category.id)}
+                                        onMouseLeave={handleCategoryLeave}
                                     >
-                                        <Icon className="w-4 h-4 text-orange-600" />
-                                        <span className="text-gray-700">{category.name}</span>
-                                    </button>
+                                        <button
+                                            onClick={() => handleCategoryClick(category.id)}
+                                            className="w-full px-3 py-2 flex items-center justify-between hover:bg-orange-50 transition text-left text-sm"
+                                        >
+                                            <div className="flex items-center space-x-2">
+                                                <Icon className="w-4 h-4 text-orange-600" />
+                                                <span className="text-gray-700">{category.name}</span>
+                                            </div>
+                                            {hasChildren && (
+                                                <ChevronRight className="w-3 h-3 text-gray-400" />
+                                            )}
+                                        </button>
+
+                                        {/* Children Dropdown */}
+                                        {hoveredCategory === category.id && childrenCategories[category.id]?.length > 0 && (
+                                            <div className="absolute left-full top-0 ml-1 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[200px] max-w-[300px] z-50">
+                                                <div className="py-2">
+                                                    {childrenCategories[category.id].map((child) => (
+                                                        <button
+                                                            key={child.id}
+                                                            onClick={() => handleCategoryClick(child.id)}
+                                                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition"
+                                                        >
+                                                            {child.name}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 );
                             })}
 
                             {/* Conditional "More" Button */}
                             {fetchedCategories.length > 7 && (
                                 <button
-                                    // You'll need a specific handler for the 'More' button, 
-                                    // e.g., to navigate to an all-categories page or expand the list.
                                     onClick={() => console.log('Handle More Categories Click')}
                                     className="w-full px-3 py-2 flex items-center justify-center space-x-2 bg-gray-50 hover:bg-orange-100 transition text-left text-sm font-semibold text-orange-600"
                                 >
-                                    {/* A simple icon like an arrow down or ellipses might be nice */}
                                     <span>View All ({fetchedCategories.length})</span>
                                 </button>
                             )}
@@ -397,11 +445,11 @@ const ProductCarousel = () => {
                                                             <strong>Limited Time Offer</strong> - Don't miss out!
                                                         </p>
                                                     </div>
-                                                    <div className="w-full md:w-1/2 h-48 md:h-full order-1 md:order-2 **flex items-center justify-center**">
+                                                    <div className="w-full md:w-1/2 h-48 md:h-full order-1 md:order-2 flex items-center justify-center">
                                                         <img
                                                             src={mainImage}
                                                             alt={slide.name}
-                                                            className="**max-h-full max-w-full object-contain**"
+                                                            className="max-h-full max-w-full object-contain"
                                                             onError={(e) => {
                                                                 e.target.onerror = null;
                                                                 e.target.src = "https://placehold.co/800x400/f0f0f0/333333?text=Product+Image";
@@ -424,7 +472,7 @@ const ProductCarousel = () => {
                                     <ChevronLeft className="w-5 h-5 text-orange-600" />
                                 </button>
                                 <button
-                                    className="absolute top-1/2 -translate-y-1/2 right-0 z-10 bg-white bg-opacity-70 p-2 rounded-r-full hover:bg-opacity-100 transition shadow-lg hidden md:block"
+                                    className="absolute top-1/2 -translate-y-1/2 right-0 z-10 bg-white bg-opacity-70 p-2 rounded-l-full hover:bg-opacity-100 transition shadow-lg hidden md:block"
                                     onClick={goToNext}
                                     aria-label="Next Slide"
                                 >

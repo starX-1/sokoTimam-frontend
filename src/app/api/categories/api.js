@@ -3,7 +3,11 @@ import instance from "../../Hooks/axios";
 class Categories {
 
   async getCategories() {
-    const response = await instance.get("/category");
+    const response = await instance.get("/categories/parents");
+    return response.data;
+  }
+  async getCategoryChildren(parentId) {
+    const response = await instance.get(`/category/${parentId}/children`);
     return response.data;
   }
 
