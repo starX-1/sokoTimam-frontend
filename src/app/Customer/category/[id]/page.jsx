@@ -21,19 +21,47 @@ const CategoryProductsPage = () => {
             if (!categoryId) return;
 
             try {
-                // 1. Fetch products for the category
-                // Assuming you have an API method to fetch products by category ID
-                const productResponse = await Categories.getProductsByCategory(categoryId);
-                setProducts(productResponse.products || []);
+                setLoading(true);
 
-                // 2. Fetch the category name for the title
+                // 1️⃣ Fetch products for the category
+                const productResponse = await Categories.getProductsByCategory(categoryId);
+                const productsData = productResponse?.products || [];
+
+                console.log('Fetched products:', productsData);
+
+                // 2️⃣ Fetch images for each product concurrently using Promise.all
+                const enrichedProducts = await Promise.all(
+                    productsData.map(async (product) => {
+                        try {
+                            console.log('Fetching images for product ID:', product.id);
+                            const imageData = await Products.getProductImagesById(product.id);
+                            console.log(`Fetched images for product ID ${product.id}:`, imageData);
+
+                            return {
+                                ...product,
+                                images: imageData?.images || [], // Attach images to each product
+                            };
+                        } catch (err) {
+                            console.error(`Error fetching images for product ${product.id}:`, err);
+                            return {
+                                ...product,
+                                images: [], // Default to empty images on error
+                            };
+                        }
+                    })
+                );
+
+                // Update the enriched products state
+                setProducts(enrichedProducts);
+
+                // 3️⃣ Fetch the category name for the title
                 const categoryResponse = await Categories.getCategoryById(categoryId);
                 console.log('Fetched category:', categoryResponse);
-                setCategoryName(categoryResponse.name || 'Products');
 
-                setLoading(false);
+                setCategoryName(categoryResponse?.category?.name || 'Products');
             } catch (error) {
                 console.error("Error fetching category products:", error);
+            } finally {
                 setLoading(false);
             }
         };
@@ -96,7 +124,7 @@ const CategoryProductsPage = () => {
                 {/* Breadcrumb / Title */}
                 <div className="mb-8">
                     <nav className="text-sm text-gray-600 mb-2">
-                        <span className="hover:text-orange-600 cursor-pointer">Home</span>
+                        <span onClick={() => router.push('/')} className="hover:text-orange-600 cursor-pointer">Home</span>
                         <span className="mx-2">/</span>
                         <span className="text-gray-900 font-medium">{categoryName}</span>
                     </nav>

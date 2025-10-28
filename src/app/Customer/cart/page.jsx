@@ -84,16 +84,18 @@ const CartPage = () => {
         const quantity = item.quantity;
         const itemTotal = price * quantity;
 
+
+
         return (
             <div className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-md transition-shadow">
                 <div className="flex gap-3">
                     {/* Product Image - Small, crisp display */}
                     {/* Image: Default size is now w-10 h-10 (40x40px) for a compact look */}
                     <div className="flex-shrink-0">
-                        <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
+                        <div className="w-32 h-32 rounded-md overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
                             <img
                                 // Placeholder size also reduced to match the new 40x40 dimension
-                                src={product.ImageUrl || 'https://placehold.co/40x40/f0f0f0/333333?text=Prod'}
+                                src={product.images?.[0]?.imageUrl || 'https://placehold.co/40x40/f0f0f0/333333?text=Prod'}
                                 alt={product.name}
                                 // Use max-w/h-full to ensure the image scales to fit the w-10 h-10 container
                                 className="max-w-full max-h-full object-contain"
@@ -189,7 +191,7 @@ const CartPage = () => {
                 {/* Page Header */}
                 <div className="mb-6 sm:mb-8">
                     <button
-                        onClick={() => router.push('/Customer/products')}
+                        onClick={() => router.push('/')}
                         className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 text-sm sm:text-base transition"
                     >
                         <ArrowLeft className="w-4 h-4" />
