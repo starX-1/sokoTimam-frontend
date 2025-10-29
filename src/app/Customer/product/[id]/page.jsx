@@ -8,6 +8,7 @@ import Cart from '../../../../app/api/cart/api'
 import { ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Star, Minus, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getSession } from 'next-auth/react';
 import { toast } from 'react-toastify';
+import { useCart } from '../../../Hooks/CartContext';
 
 const ProductDetailPage = () => {
     const params = useParams();
@@ -20,6 +21,8 @@ const ProductDetailPage = () => {
     const [isFavorite, setIsFavorite] = useState(false);
     const router = useRouter();
     const [user, setUser] = useState(null);
+    const [adding, setAdding] = useState(false);
+    const { addItemToCart } = useCart();
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -119,34 +122,26 @@ const ProductDetailPage = () => {
 
     const handleAddToCart = async () => {
         console.log("Adding to cart", product.id, quantity);
-        // if user is null show modal to tell user to login
+
         if (!user) {
             setLoginMOdalOpen(true);
             return;
         }
 
-        const data = {
-            userId: user.id,
-            items: [
-                {
-                    productId: product.id,
-                    quantity: quantity
-                }
-            ]
-        }
-        // console.log(data);
         try {
-            const response = await Cart.addToCart(data);
-            console.log(response);
-            if (response.message === "Cart updated successfully") {
-                toast.success("Cart updated successfully");
-            } else {
-                toast.error("Error adding to cart: ");
-            }
-        } catch (error) {
-            toast.error("Error adding to cart: ");
+            setAdding(true);
+            // call the provider helper which already handles API + refresh
+            await addItemToCart({ productId: product.id, quantity: quantity || 1 });
+
+            // addItemToCart already shows success toast — but we can show one here too if you prefer:
+            // toast.success("Added to cart");
+        } catch (err) {
+            console.error("add to cart error", err);
+            toast.error("Error adding to cart.");
+        } finally {
+            setAdding(false);
         }
-    }
+    };
 
     const mainImage = product.images?.[selectedImage]?.imageUrl || 'https://placehold.co/800x800/f0f0f0/333333?text=No+Image';
     const formattedPrice = parseFloat(product.price).toLocaleString();
@@ -324,18 +319,33 @@ const ProductDetailPage = () => {
 
                         {/* Action Buttons */}
                         <div className="flex flex-col gap-2 md:flex-row md:gap-4">
-                            <button
-                                disabled={product.stock === 0}
-                                onClick={handleAddToCart}
-                                // Added 'md:flex-1' to let the button expand fully in a row on medium screens
-                                className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded font-medium text-xs transition shadow-md md:flex-1 ${product.stock > 0
-                                    ? 'bg-orange-600 text-white hover:bg-orange-700'
-                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    }`}
-                            >
-                                <ShoppingCart className="w-3 h-3" />
-                                {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
-                            </button>
+                            {
+                                adding ? (
+                                    <button
+                                        disabled
+                                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded font-medium text-xs transition shadow-md bg-gray-300 text-gray-500 cursor-not-allowed"
+                                    >
+                                        <svg className="animate-spin w-4 h-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                        </svg>
+                                        Adding...
+                                    </button>
+                                ) : (
+                                    <button
+                                        disabled={product.stock === 0}
+                                        onClick={handleAddToCart}
+                                        // Added 'md:flex-1' to let the button expand fully in a row on medium screens
+                                        className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded font-medium text-xs transition shadow-md md:flex-1 ${product.stock > 0
+                                            ? 'bg-orange-600 text-white hover:bg-orange-700'
+                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                            }`}
+                                    >
+                                        <ShoppingCart className="w-3 h-3" />
+                                        {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+                                    </button>
+                                )
+                            }
                             <button
                                 // Added 'flex-1' for full width when stacked, and 'md:flex-initial' to shrink it back when in a row
                                 className="flex-1 px-2 py-1 border-2 border-orange-600 text-orange-600 rounded font-medium text-xs hover:bg-orange-50 transition md:flex-initial"

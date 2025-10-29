@@ -9,16 +9,18 @@ import { useRouter } from 'next/navigation';
 import { getSession } from 'next-auth/react';
 import CheckoutAPI from '../../api/checkout/api';
 import { waitForPaymentUpdate } from '../../Hooks/waitForPaymentUpdate'
+import Cart from '../../api/cart/api'
 
 
 const CartPage = () => {
     // 1. Access global state and actions from context
     const {
+        cart,
         items: cartItems, // Rename items to cartItems for existing JSX compatibility
         loading,
         subtotal: calculatedSubtotal, // Get subtotal directly from context
         updateItemQuantity,
-        // removeItemFromCart, // Use the real action when implemented in context
+        removeItemFromCart, // Use the real action when implemented in context
         isLoggedIn
     } = useCart();
 
@@ -47,10 +49,8 @@ const CartPage = () => {
         }
     };
 
-    const handleRemoveItem = (itemId) => {
-        // *Placeholder: When you implement removeItemFromCart in your context, use it here.*
-        // removeItemFromCart(itemId);
-        toast.info("Item removed from cart. (Placeholder action)");
+    const handleRemoveItem = async (itemId) => {
+        await removeItemFromCart(itemId);
     };
 
     const handleCheckout = () => {
@@ -244,6 +244,27 @@ const CartPage = () => {
         }
     };
 
+    // empty cart function 
+    const handleEmptyCart = async () => {
+        // console.log("Emptying cart", cart)
+        if (!cart || !cart.id) {
+            return;
+        }
+        try {
+            const res = await Cart.deleteCart(cart.id);
+            console.log("Empty cart response:", res);
+            // if (res?.status === 'success') {
+            //     toast.success("Cart emptied successfully");
+            //     fetchCart();
+            // } else {
+            //     toast.error("Failed to empty cart");
+            // }
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to empty cart");
+        }
+
+    };
 
     const ConfirmationModal = () => {
         return (
@@ -541,6 +562,23 @@ const CartPage = () => {
                                 ({cartItems.length} {cartItems.length === 1 ? 'item' : 'items'})
                             </span>
                         )}
+                        {/* empty entire cart button  */}
+                        <div className="relative group ml-auto">
+                            <button
+                                onClick={handleEmptyCart}
+                                disabled={cartItems.length === 0}
+                                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm sm:text-base transition border border-orange-600 px-3 py-1 rounded"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Empty Cart
+                            </button>
+
+                            {/* Tooltip */}
+                            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 text-xs text-white bg-gray-800 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+                                The action removes all items from your cart
+                            </span>
+                        </div>
+
                     </h1>
                 </div>
 
@@ -570,6 +608,7 @@ const CartPage = () => {
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
                         {/* Cart Items List */}
+
                         <div className="lg:col-span-2 space-y-3 sm:space-y-4">
                             {cartItems.map(item => (
                                 <CartItem key={item.id} item={item} />

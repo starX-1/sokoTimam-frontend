@@ -14,16 +14,16 @@ class Cart {
         return response.data;
     }
     async removeCartItem(itemId) {
-        const response = await instance.delete(`/cart/${itemId}`);
-        return response.data;
-    }
-    async clearCart() {
-        const response = await instance.delete('/cart');
+        const response = await instance.delete(`/cart/items/${itemId}`);
         return response.data;
     }
 
     async getUserCart(userId) {
         const response = await instance.get(`/cart/with/items/${userId}`);
+        return response.data;
+    }
+    async deleteCart(cartId) {
+        const response = await instance.delete(`/cart/${cartId}`);
         return response.data;
     }
 }
