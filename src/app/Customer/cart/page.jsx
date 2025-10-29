@@ -82,6 +82,9 @@ const CartPage = () => {
     const [loggedInUser, setLoggedInUser] = useState(null);
     const [mpesaNumber, setMpesaNumber] = useState('');
     const [shippingAddress, setShippingAddress] = useState('');
+    // usestates for success and fail modals
+    const [isPaymentSuccessful, setIsPaymentSuccessful] = useState(false);
+    const [isPaymentFailed, setIsPaymentFailed] = useState(false);
 
     useEffect(() => {
         const fetchSession = async () => {
@@ -108,6 +111,8 @@ const CartPage = () => {
             </div>
         );
     }
+
+
 
     const processOrder = async () => {
         // prevent duplicate submissions
@@ -187,10 +192,14 @@ const CartPage = () => {
                     toast.success(update.message || "Payment confirmed");
                     setPaymentStatus("success");
                     setConfirmationModalOpen(false);
-                    router.push(`/order/success/${orderId}`);
+                    // show the success modal
+                    setIsPaymentSuccessful(true);
+                    // router.push(`/order/success/${orderId}`);
                 } else if (normalizedStatus === "cancelled" || normalizedStatus === "failed") {
                     toast.error(update.message || "Payment failed or cancelled.");
                     setPaymentStatus("failed");
+                    // show fail modal
+                    setIsPaymentFailed(true);
                 } else {
                     // any other status, show info and keep modal open (or decide your UI flow)
                     toast.info(update.message || `Payment status: ${update.status}`);
@@ -209,10 +218,11 @@ const CartPage = () => {
                         toast.success("Payment successful (confirmed by fallback).");
                         setPaymentStatus("success");
                         setConfirmationModalOpen(false);
-                        router.push(`/order/success/${orderId}`);
+                        setIsPaymentSuccessful(true);
                     } else if (status === "failed" || status === "cancelled") {
                         toast.error("Payment failed or cancelled.");
                         setPaymentStatus("failed");
+                        setIsPaymentFailed(true);
                     } else {
                         // still pending or unknown
                         toast.info("No payment confirmation yet. Please check your Mpesa app or try again.");
@@ -221,11 +231,13 @@ const CartPage = () => {
                 } catch (fallbackErr) {
                     console.error("Fallback status check error:", fallbackErr);
                     toast.error("Unable to confirm payment now. Please check Mpesa or try again.");
+                    setIsPaymentFailed(true);
                 }
             }
         } catch (err) {
             console.error("processOrder error:", err);
             toast.error(err.message || "Failed to process order. Please try again.");
+            setIsPaymentFailed(true);
         } finally {
             // re-enable UI interaction if desired (or keep disabled until user navigates away)
             setIsProcessing(false);
@@ -352,6 +364,54 @@ const CartPage = () => {
             </div>
         );
     };
+
+    // a modal with a tick on successful payment
+    const SuccessModal = () => {
+        return (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-2xl w-full max-w-md mx-auto shadow-2xl p-6 text-center">
+                    <div className="text-green-600 mb-4">
+                        <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h2>
+                    <p className="text-gray-700 mb-6">Thank you for your purchase. Your order is being processed.</p>
+                    <button
+                        onClick={() => {
+                            setIsPaymentSuccessful(false);
+                            router.push('/');
+                        }}
+                        className="px-6 py-3 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition"
+                    >
+                        Back to Home
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
+    //  a fail modal on failed payment with an X
+    const FailModal = () => {
+        return (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-2xl w-full max-w-md mx-auto shadow-2xl p-6 text-center">
+                    <div className="text-red-600 mb-4">
+                        <X className="w-16 h-16 mx-auto" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Failed</h2>
+                    <p className="text-gray-700 mb-6">Unfortunately, your payment could not be processed. Please try again.</p>
+                    <button
+                        onClick={() => setIsPaymentFailed(false)}
+                        className="px-6 py-3 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
 
     // --- Cart Item Component - Enhanced Responsive Design ---
     const CartItem = ({ item }) => {
@@ -487,6 +547,13 @@ const CartPage = () => {
                 {
                     isConfirmationModalOpen && <ConfirmationModal />
                 }
+                {
+                    isPaymentSuccessful && <SuccessModal />
+                }
+                {
+                    isPaymentFailed && <FailModal />
+                }
+
 
                 {cartItems.length === 0 ? (
                     <div className="bg-white rounded-2xl shadow-lg p-8 sm:p-12 text-center">
