@@ -8,6 +8,8 @@ import { useCart } from '../../Hooks/CartContext'
 import { useRouter } from 'next/navigation';
 import { getSession } from 'next-auth/react';
 import CheckoutAPI from '../../api/checkout/api';
+import { waitForPaymentUpdate } from '../../Hooks/waitForPaymentUpdate'
+
 
 const CartPage = () => {
     // 1. Access global state and actions from context
@@ -24,6 +26,8 @@ const CartPage = () => {
     const [paymentMethod, setPaymentMethod] = useState('');
     const [isConfirmationModalOpen, setConfirmationModalOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentStatus, setPaymentStatus] = useState('');
+
 
     // 2. Adjust handlers to use context actions
     const handleQuantityChange = (itemId, action) => {
@@ -66,7 +70,7 @@ const CartPage = () => {
 
     // 3. Keep shipping calculation logic (now using subtotal from context)
     const calculateTotal = () => {
-        const shipping = calculatedSubtotal < 10000 ? 500 : 0;
+        const shipping = 0;
         return {
             subtotal: calculatedSubtotal,
             shipping,
@@ -104,6 +108,7 @@ const CartPage = () => {
             </div>
         );
     }
+
     const processOrder = async () => {
         // prevent duplicate submissions
         if (isProcessing) return;
@@ -127,71 +132,102 @@ const CartPage = () => {
         const orderData = {
             userId: loggedInUser.id,
             shippingAddress,
-            items: cartItems.map(item => ({
+            items: cartItems.map((item) => ({
                 productId: item.productId,
                 quantity: item.quantity,
             })),
         };
 
         try {
+            // 1) create order
             const res = await CheckoutAPI.createOrder(orderData);
-            const orderId = res?.data.orderId;
+            const orderId = res?.data?.orderId;
 
             if (!orderId) {
                 console.error("Order creation returned no id:", res);
                 throw new Error("Unable to create order. Please try again.");
             }
 
+            // 2) initiate STK push
             const stkPushPayload = {
                 phoneNumber: mpesaNumber,
                 amount: total,
                 orderId,
             };
 
-
-
             const stkRes = await CheckoutAPI.innitiateStkPush(stkPushPayload);
+            console.log("STK Push Response:", stkRes);
 
             // accept a couple of possible success shapes
-            const successMessage = stkRes?.message?.toLowerCase() ?? "";
+            const successMessage = (stkRes?.message ?? "").toLowerCase();
             const success =
                 successMessage.includes("stk push initiated") ||
                 stkRes?.status === "initiated" ||
                 stkRes?.success === true;
 
-            if (success) {
-                toast.info("STK Push initiated. Please complete payment on your phone.");
-
-                // Show waiting modal
-                setPaymentStatus("pending");
-
-                // Poll backend every few seconds to check payment status
-                const interval = setInterval(async () => {
-                    try {
-                        const statusRes = await CheckoutAPI.checkPaymentStatus(orderId);
-                        if (statusRes.status === "SUCCESS") {
-                            clearInterval(interval);
-                            toast.success("Payment successful!");
-                            setConfirmationModalOpen(false);
-                            router.push(`/order/success/${orderId}`);
-                        } else if (statusRes.status === "FAILED") {
-                            clearInterval(interval);
-                            toast.error("Payment failed or was cancelled.");
-                        }
-                    } catch (err) {
-                        clearInterval(interval);
-                        toast.error("Error checking payment status. Please refresh.");
-                    }
-                }, 5000); // check every 5 seconds
+            if (!success) {
+                console.error("STK push failed:", stkRes);
+                toast.error(stkRes?.message || "Failed to initiate payment. Please try again.");
+                return;
             }
 
+            // STK Push initiated — inform user + show waiting UI
+            toast.info("STK Push initiated. Please complete payment on your phone.");
+            setPaymentStatus("pending");
+            setConfirmationModalOpen(true);
 
-            console.error("STK push failed:", stkRes);
-            toast.error(stkRes?.message || "Failed to initiate payment. Please try again.");
+            // 3) Wait for socket-driven payment update (uses your waitForPaymentUpdate util)
+            try {
+                // waitForPaymentUpdate will join the `order_<id>` room and resolve when payment_update arrives
+                const update = await waitForPaymentUpdate(orderId, 2 * 60 * 1000); // 2 min timeout
+
+                const normalizedStatus = (update.status || "").toString().toLowerCase();
+
+                if (normalizedStatus === "paid" || normalizedStatus === "success" || normalizedStatus === "completed") {
+                    toast.success(update.message || "Payment confirmed");
+                    setPaymentStatus("success");
+                    setConfirmationModalOpen(false);
+                    router.push(`/order/success/${orderId}`);
+                } else if (normalizedStatus === "cancelled" || normalizedStatus === "failed") {
+                    toast.error(update.message || "Payment failed or cancelled.");
+                    setPaymentStatus("failed");
+                } else {
+                    // any other status, show info and keep modal open (or decide your UI flow)
+                    toast.info(update.message || `Payment status: ${update.status}`);
+                    setPaymentStatus(normalizedStatus);
+                }
+            } catch (socketErr) {
+                // socket timed out or errored — fallback to one immediate manual check
+                console.warn("Socket wait error or timeout:", socketErr);
+
+                try {
+                    const statusRes = await CheckoutAPI.checkPaymentStatus(orderId);
+
+                    const status = (statusRes?.status || "").toString().toLowerCase();
+
+                    if (status === "success" || status === "paid" || status === "completed") {
+                        toast.success("Payment successful (confirmed by fallback).");
+                        setPaymentStatus("success");
+                        setConfirmationModalOpen(false);
+                        router.push(`/order/success/${orderId}`);
+                    } else if (status === "failed" || status === "cancelled") {
+                        toast.error("Payment failed or cancelled.");
+                        setPaymentStatus("failed");
+                    } else {
+                        // still pending or unknown
+                        toast.info("No payment confirmation yet. Please check your Mpesa app or try again.");
+                        setPaymentStatus("pending");
+                    }
+                } catch (fallbackErr) {
+                    console.error("Fallback status check error:", fallbackErr);
+                    toast.error("Unable to confirm payment now. Please check Mpesa or try again.");
+                }
+            }
         } catch (err) {
             console.error("processOrder error:", err);
-            toast.error(err?.message || "Failed to process order. Please try again.");
+            toast.error(err.message || "Failed to process order. Please try again.");
         } finally {
+            // re-enable UI interaction if desired (or keep disabled until user navigates away)
             setIsProcessing(false);
         }
     };
