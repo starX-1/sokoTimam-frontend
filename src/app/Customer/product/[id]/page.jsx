@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Products from '../../../api/products/api';
 import Header from '../../../components/header'
 import Footer from '../../../components/Footer'
-import Cart from '../../../../app/api/cart/api'
+// import Cart from '../../../../app/api/cart/api'
 import { ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Star, Minus, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getSession } from 'next-auth/react';
 import { toast } from 'react-toastify';

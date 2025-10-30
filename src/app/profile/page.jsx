@@ -1,83 +1,32 @@
 'use client'
 import { Award, CreditCard, Edit, Heart, Inbox, ShoppingBag, Ticket, Eye, Download, Star, MapPin, Truck, CheckCircle, Clock, XCircle, User, LogOut, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ProfileSidebarLink from "../components/ProfileSidebarLink";
 import MyOrdersPanel from "../components/OrdersPanel";
 import Header from "../components/header";
 import Footer from "../components/Footer";
+import Orders from '../api/Orders/api'
+import { getSession } from "next-auth/react";
+import useUserOrders from "../Hooks/UseUserOrders";
+
 const ProfilePage = () => {
     const [activeTab, setActiveTab] = useState('orders');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [orders] = useState([
-        {
-            id: 'ORD-7842',
-            date: '2024-01-15',
-            status: 'delivered',
-            total: 12499,
-            items: [
-                {
-                    name: 'Wireless Bluetooth Headphones',
-                    price: 8499,
-                    quantity: 1,
-                    image: 'https://placehold.co/64x64/3b82f6/ffffff?text=HP'
-                },
-                {
-                    name: 'Phone Case',
-                    price: 1500,
-                    quantity: 2,
-                    image: 'https://placehold.co/64x64/ef4444/ffffff?text=PC'
-                }
-            ]
-        },
-        {
-            id: 'ORD-7841',
-            date: '2024-01-12',
-            status: 'shipped',
-            total: 4599,
-            items: [
-                {
-                    name: 'Smart Watch',
-                    price: 4599,
-                    quantity: 1,
-                    image: 'https://placehold.co/64x64/10b981/ffffff?text=SW'
-                }
-            ]
-        },
-        {
-            id: 'ORD-7839',
-            date: '2024-01-08',
-            status: 'processing',
-            total: 7899,
-            items: [
-                {
-                    name: 'Laptop Backpack',
-                    price: 2899,
-                    quantity: 1,
-                    image: 'https://placehold.co/64x64/f59e0b/ffffff?text=BP'
-                },
-                {
-                    name: 'USB-C Cable',
-                    price: 1500,
-                    quantity: 3,
-                    image: 'https://placehold.co/64x64/6b7280/ffffff?text=UC'
-                }
-            ]
-        },
-        {
-            id: 'ORD-7835',
-            date: '2024-01-02',
-            status: 'cancelled',
-            total: 3299,
-            items: [
-                {
-                    name: 'Wireless Mouse',
-                    price: 3299,
-                    quantity: 1,
-                    image: 'https://placehold.co/64x64/8b5cf6/ffffff?text=WM'
-                }
-            ]
-        }
-    ]);
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            const session = await getSession();
+            setUser(session?.user || null);
+        };
+        fetchUserData();
+    }, []);
+
+
+    const { orders} = useUserOrders(user);
+
+
+    console.log('User Orders:', orders);
 
     const handleLogout = () => {
         alert('Logged out successfully');
@@ -102,7 +51,7 @@ const ProfilePage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
-            <Header/>
+            <Header />
             {/* Mobile Header */}
             <div className="md:hidden bg-white border-b border-gray-200 sticky top-0 z-10">
                 <div className="flex items-center justify-between p-4">
@@ -219,7 +168,7 @@ const ProfilePage = () => {
                     </div>
                 </div>
             </div>
-            <Footer/> 
+            <Footer />
         </div>
     );
 };

@@ -2,8 +2,31 @@
 import OrderCard from "./OrderCard";
 import { ShoppingBag, Clock, CheckCircle, Truck } from "lucide-react";
 import { useState } from "react";
+import useUserOrders from "../Hooks/UseUserOrders";
 
-const MyOrdersPanel = ({ orders }) => {
+
+/* Skeleton card for loading state */
+function OrderCardSkeleton() {
+    return (
+        <div className="border rounded-lg p-4 flex items-start gap-4 animate-pulse">
+            <div className="w-16 h-16 rounded-md bg-gray-200" />
+            <div className="flex-1 space-y-2 py-1">
+                <div className="h-4 bg-gray-200 rounded w-1/3" />
+                <div className="h-3 bg-gray-200 rounded w-1/4" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
+                <div className="mt-1 flex gap-2">
+                    <div className="h-8 w-20 bg-gray-200 rounded" />
+                    <div className="h-8 w-16 bg-gray-200 rounded" />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+
+const MyOrdersPanel = ({ orders, user }) => {
+
+    const { loadingOrders, ordersError } = useUserOrders(user);
 
     const [filter, setFilter] = useState('all');
 
@@ -21,13 +44,13 @@ const MyOrdersPanel = ({ orders }) => {
 
             {/* Order Filters */}
             <div className="flex space-x-1 overflow-x-auto pb-2 scrollbar-hide">
-                {['all', 'processing', 'shipped', 'delivered', 'cancelled'].map((filterType) => (
+                {['all', 'pending', 'shipped', 'delivered', 'cancelled'].map((filterType) => (
                     <button
                         key={filterType}
                         onClick={() => setFilter(filterType)}
                         className={`px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap transition duration-150 ${filter === filterType
-                                ? 'bg-orange-600 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'bg-orange-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                     >
                         {filterType.charAt(0).toUpperCase() + filterType.slice(1)}
@@ -36,11 +59,12 @@ const MyOrdersPanel = ({ orders }) => {
             </div>
 
             {/* Orders List */}
-            <div className="space-y-3">
-                {filteredOrders.length > 0 ? (
-                    filteredOrders.map((order) => (
-                        <OrderCard key={order.id} order={order} />
-                    ))
+            <div className="space-y-3" aria-live="polite">
+                {loadingOrders ? (
+                    // show 3 skeletons while loading
+                    Array.from({ length: 1 }).map((_, i) => <OrderCardSkeleton key={i} />)
+                ) : filteredOrders.length > 0 ? (
+                    filteredOrders.map((order) => <OrderCard key={order.id} order={order} />)
                 ) : (
                     <div className="text-center py-8">
                         <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -56,6 +80,7 @@ const MyOrdersPanel = ({ orders }) => {
                     </div>
                 )}
             </div>
+
 
             {/* Order Statistics */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
