@@ -20,8 +20,9 @@ class Cart {
 
     async getUserCart(userId) {
         const response = await instance.get(`/cart/with/items/${userId}`);
-        return response.data;
+        return response.data || [];
     }
+
     async deleteCart(cartId) {
         const response = await instance.delete(`/cart/${cartId}`);
         return response.data;
