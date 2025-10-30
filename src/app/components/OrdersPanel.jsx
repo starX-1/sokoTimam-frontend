@@ -1,9 +1,9 @@
+// components/OrdersPanel.jsx
 'use client'
 import OrderCard from "./OrderCard";
 import { ShoppingBag, Clock, CheckCircle, Truck } from "lucide-react";
 import { useState } from "react";
-import useUserOrders from "../Hooks/UseUserOrders";
-
+import { useRouter } from "next/navigation";
 
 /* Skeleton card for loading state */
 function OrderCardSkeleton() {
@@ -23,11 +23,8 @@ function OrderCardSkeleton() {
     );
 }
 
-
-const MyOrdersPanel = ({ orders, user }) => {
-
-    const { loadingOrders, ordersError } = useUserOrders(user);
-
+const MyOrdersPanel = ({ user, orders = [], loadingOrders = false, ordersError = null }) => {
+    const router = useRouter();
     const [filter, setFilter] = useState('all');
 
     const filteredOrders = filter === 'all'
@@ -44,7 +41,7 @@ const MyOrdersPanel = ({ orders, user }) => {
 
             {/* Order Filters */}
             <div className="flex space-x-1 overflow-x-auto pb-2 scrollbar-hide">
-                {['all', 'pending', 'shipped', 'delivered', 'cancelled'].map((filterType) => (
+                {['all', 'pending', 'paid', 'shipped', 'delivered', 'cancelled'].map((filterType) => (
                     <button
                         key={filterType}
                         onClick={() => setFilter(filterType)}
@@ -61,7 +58,7 @@ const MyOrdersPanel = ({ orders, user }) => {
             {/* Orders List */}
             <div className="space-y-3" aria-live="polite">
                 {loadingOrders ? (
-                    // show 3 skeletons while loading
+                    // show skeleton(s) while loading
                     Array.from({ length: 1 }).map((_, i) => <OrderCardSkeleton key={i} />)
                 ) : filteredOrders.length > 0 ? (
                     filteredOrders.map((order) => <OrderCard key={order.id} order={order} />)
@@ -74,13 +71,14 @@ const MyOrdersPanel = ({ orders, user }) => {
                                 ? "You haven't placed any orders yet."
                                 : `No ${filter} orders found.`}
                         </p>
-                        <button className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition duration-150 font-medium text-sm">
+                        <button
+                            onClick={() => router.push('/')}
+                            className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition duration-150 font-medium text-sm">
                             Start Shopping
                         </button>
                     </div>
                 )}
             </div>
-
 
             {/* Order Statistics */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">

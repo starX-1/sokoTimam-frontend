@@ -5,7 +5,7 @@ import ProfileSidebarLink from "../components/ProfileSidebarLink";
 import MyOrdersPanel from "../components/OrdersPanel";
 import Header from "../components/header";
 import Footer from "../components/Footer";
-import Orders from '../api/Orders/api'
+// import Orders from '../api/Orders/api'
 import { getSession } from "next-auth/react";
 import useUserOrders from "../Hooks/UseUserOrders";
 
@@ -23,7 +23,7 @@ const ProfilePage = () => {
     }, []);
 
 
-    const { orders} = useUserOrders(user);
+    const { orders, loadingOrders, ordersError } = useUserOrders(user);
 
 
     console.log('User Orders:', orders);
@@ -35,7 +35,7 @@ const ProfilePage = () => {
     const renderActiveTabContent = () => {
         switch (activeTab) {
             case 'orders':
-                return <MyOrdersPanel orders={orders} />;
+                return <MyOrdersPanel user={user} orders={orders} loadingOrders={loadingOrders} ordersError={ordersError} />;
             case 'inbox':
             case 'saved':
             case 'vouchers':
@@ -156,7 +156,8 @@ const ProfilePage = () => {
                 <div className="w-full md:w-3/4 p-4 md:p-8">
                     <div className="bg-white rounded-lg md:rounded-xl shadow-sm md:shadow-md p-4 md:p-6">
                         {activeTab === 'orders' ? (
-                            <MyOrdersPanel orders={orders} />
+                            // Rendered content from renderActiveTabContent (already passes props)
+                            renderActiveTabContent()
                         ) : (
                             <>
                                 <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 pb-2 border-b">

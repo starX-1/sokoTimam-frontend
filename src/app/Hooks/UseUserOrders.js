@@ -6,7 +6,6 @@ export default function useUserOrders(user, opts = {}) {
     const { minLoadingMs = 300 } = opts;
 
     const [orders, setOrders] = useState([]);
-    // start true so the page shows loading immediately
     const [loadingOrders, setLoadingOrders] = useState(true);
     const [ordersError, setOrdersError] = useState(null);
     const mountedRef = useRef(true);
@@ -42,21 +41,16 @@ export default function useUserOrders(user, opts = {}) {
     };
 
     useEffect(() => {
-        // Every time user changes, we start a new fetch cycle
         const currentFetchId = ++fetchIdRef.current;
-
-        // Ensure we show loader immediately on first mount / user change
-        if (mountedRef.current) setLoadingOrders(true);
+        setLoadingOrders(true);
         setOrdersError(null);
 
         const start = Date.now();
 
         const finishLoading = () => {
-            // ensure we don't turn off loading too quickly (avoid flicker)
             const elapsed = Date.now() - start;
             const extra = Math.max(0, minLoadingMs - elapsed);
             setTimeout(() => {
-                // only clear loading for the *current* fetch cycle and when mounted
                 if (!mountedRef.current) return;
                 if (currentFetchId !== fetchIdRef.current) return;
                 setLoadingOrders(false);
@@ -64,10 +58,8 @@ export default function useUserOrders(user, opts = {}) {
         };
 
         const doFetch = async () => {
-            // case A: user is falsy (auth still resolving or no user)
             if (!user) {
-                // keep loading for at least minLoadingMs, then hide it
-                // This prevents "No orders found" flash on initial mount
+                setOrders([]);
                 finishLoading();
                 return;
             }
@@ -75,8 +67,11 @@ export default function useUserOrders(user, opts = {}) {
             try {
                 const response = await Orders.getOrdersByUserId(user.id);
                 const rawOrders = response?.data ?? response;
+
+                if (!mountedRef.current || currentFetchId !== fetchIdRef.current) return;
+
                 const transformed = await Promise.all(
-                    (Array.isArray(rawOrders) ? rawOrders : [rawOrders]).map(async (order) => {
+                    (Array.isArray(rawOrders) ? rawOrders : []).map(async (order) => {
                         const items = await Promise.all(
                             (order.items ?? []).map(async (item) => {
                                 const product = await fetchProductIfMissing(item);
@@ -109,27 +104,21 @@ export default function useUserOrders(user, opts = {}) {
                     })
                 );
 
-                if (!mountedRef.current) return;
-                // ensure this result is for the active fetch
-                if (currentFetchId !== fetchIdRef.current) return;
+                if (!mountedRef.current || currentFetchId !== fetchIdRef.current) return;
 
                 setOrders(transformed);
             } catch (err) {
-                if (!mountedRef.current) return;
-                if (currentFetchId !== fetchIdRef.current) return;
+                if (!mountedRef.current || currentFetchId !== fetchIdRef.current) return;
                 console.error('[useUserOrders] fetch error', err);
                 setOrdersError(err);
-                setOrders([]); // ensure list is empty on error
+                setOrders([]);
             } finally {
                 finishLoading();
             }
         };
 
         doFetch();
-
-        // cleanup: if user changes quickly the next effect run will bump fetchIdRef and this run will be ignored
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user?.id]); // run when user id changes
+    }, [user?.id]);
 
     return { orders, loadingOrders, ordersError };
 }
