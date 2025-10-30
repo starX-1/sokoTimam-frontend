@@ -128,6 +128,23 @@ export const CartProvider = ({ children }) => {
             toast.error("Failed to add item to cart");
         }
     };
+    const deleteEntireCart = async () => {
+        if (!user) {
+            toast.error("Please sign in to delete the cart.");
+            return;
+        }
+
+        try {
+            // Call your API (implement accordingly)
+            await Cart.deleteCart(cart.id);
+            toast.success("Cart deleted successfully");
+            // refresh cart
+            fetchCart(user.id);
+        } catch (err) {
+            console.error('deleteEntireCart error', err);
+            toast.error("Failed to delete the cart");
+        }
+    };
 
     // expose context value
     const contextValue = {
@@ -154,6 +171,7 @@ export const CartProvider = ({ children }) => {
             })();
         },
         removeItemFromCart,
+        deleteEntireCart,
         addItemToCart,
         isLoggedIn: !!user,
     };

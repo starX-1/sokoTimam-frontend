@@ -21,6 +21,7 @@ const CartPage = () => {
         subtotal: calculatedSubtotal, // Get subtotal directly from context
         updateItemQuantity,
         removeItemFromCart, // Use the real action when implemented in context
+        deleteEntireCart,
         isLoggedIn
     } = useCart();
 
@@ -246,29 +247,12 @@ const CartPage = () => {
 
     // empty cart function 
     const handleEmptyCart = async () => {
-        // console.log("Emptying cart", cart)
-        if (!cart || !cart.id) {
-            return;
-        }
-        try {
-            const res = await Cart.deleteCart(cart.id);
-            console.log("Empty cart response:", res);
-            // if (res?.status === 'success') {
-            //     toast.success("Cart emptied successfully");
-            //     fetchCart();
-            // } else {
-            //     toast.error("Failed to empty cart");
-            // }
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to empty cart");
-        }
-
+        await deleteEntireCart();
     };
 
     const ConfirmationModal = () => {
         return (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-auto">
                 <div className="bg-white rounded-2xl w-full max-w-2xl mx-auto shadow-2xl">
                     {/* Receipt Header */}
                     <div className="bg-gradient-to-r from-orange-600 to-orange-500 text-white p-6 rounded-t-2xl">
