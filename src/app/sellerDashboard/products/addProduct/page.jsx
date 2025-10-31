@@ -26,7 +26,7 @@ const InputGroup = ({ label, icon: Icon, type = 'text', name, placeholder, isReq
                 value={value}
                 min={min}
                 onChange={onChange} // Use the passed-in onChange prop
-                className={`w-full py-3 ${Icon ? 'pl-10' : 'pl-4'} pr-4 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:border-orange-500 transition duration-150 text-gray-800`}
+                className={`w-full py-3 ${Icon ? 'pl-10' : 'pl-4'} pr-4 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:outline-none focus:border-orange-500 transition duration-150 text-gray-800`}
                 step={type === 'number' && name === 'price' ? '0.01' : (type === 'number' ? '1' : undefined)}
             />
         </div>
@@ -225,7 +225,7 @@ const AddProductView = ({ onViewChange }) => {
                                         value={productData.shopId}
                                         onChange={handleChange}
                                         required
-                                        className="w-full py-3 pl-10 pr-4 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:border-orange-500 transition duration-150 text-gray-800"
+                                        className="w-full py-3 pl-10 pr-4 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:outline-none focus:border-orange-500 transition duration-150 text-gray-800"
                                     >
                                         <option value="">Select a Shop</option>
                                         {shops.map(shop => (
@@ -248,7 +248,7 @@ const AddProductView = ({ onViewChange }) => {
                                         value={productData.categoryId}
                                         onChange={handleChange}
                                         required
-                                        className="w-full py-3 pl-10 pr-4 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:border-orange-500 transition duration-150 text-gray-800"
+                                        className="w-full py-3 pl-10 pr-4 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:outline-none focus:border-orange-500 transition duration-150 text-gray-800"
                                     >
                                         <option value="">Select a Category</option>
                                         {categories.map(category => (
@@ -271,7 +271,7 @@ const AddProductView = ({ onViewChange }) => {
                                             name="subcategoryId"
                                             value={productData.subcategoryId}
                                             onChange={handleChange}
-                                            className="w-full py-3 pl-10 pr-4 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:border-orange-500 transition duration-150 text-gray-800"
+                                            className="w-full py-3 pl-10 pr-4 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:outline-none focus:border-orange-500 transition duration-150 text-gray-800"
                                         >
                                             <option value="">Select a Subcategory</option>
                                             {subcategories.map(subcategory => (
@@ -316,7 +316,7 @@ const AddProductView = ({ onViewChange }) => {
                                     name="status"
                                     value={productData.status}
                                     onChange={handleChange}
-                                    className="w-full py-3 px-3 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:border-orange-500 transition duration-150 text-gray-800"
+                                    className="w-full py-3 px-3 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:outline-none focus:border-orange-500 transition duration-150 text-gray-800"
                                 >
                                     <option value="Active">Active</option>
                                     <option value="Out of Stock">Out of Stock</option>
@@ -338,7 +338,7 @@ const AddProductView = ({ onViewChange }) => {
                                         multiple
                                         accept="image/*"
                                         onChange={handleFileChange}
-                                        className="w-full py-3 pl-10 pr-4 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:border-orange-500 transition duration-150 text-gray-800"
+                                        className="w-full py-3 pl-10 pr-4 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:outline-none focus:border-orange-500 transition duration-150 text-gray-800"
                                     />
                                 </div>
                                 {productData.images.length > 0 && (
@@ -362,7 +362,7 @@ const AddProductView = ({ onViewChange }) => {
                                     required
                                     value={productData.description}
                                     onChange={handleChange}
-                                    className="w-full py-3 pl-10 pr-4 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:border-orange-500 transition duration-150 text-gray-800"
+                                    className="w-full py-3 pl-10 pr-4 border border-gray-200 rounded-xl shadow-inner focus:ring-orange-500 focus:outline-none focus:border-orange-500 transition duration-150 text-gray-800"
                                 ></textarea>
                             </div>
                         </div>
