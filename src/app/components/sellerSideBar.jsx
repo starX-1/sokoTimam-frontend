@@ -1,4 +1,4 @@
-import { X, Home, ShoppingCart, Package, Users, BarChart3, Truck, Tag, Settings, LogOut, ChartBar, Flashlight, ListOrdered } from "lucide-react";
+import { X, Home, ShoppingCart, Package, Users, BarChart3, Truck, Tag, Settings, LogOut, ChartBar, Flashlight, ListOrdered, Zap } from "lucide-react";
 import SidebarLink from './SideBarLink'
 import { signOut } from "next-auth/react";
 
@@ -6,9 +6,9 @@ const navItems = [
     { name: 'Dashboard', icon: Home, href: '/sellerDashboard' },
     { name: 'Shops', icon: ShoppingCart, href: '/sellerDashboard/shops' },
     { name: 'Products', icon: Package, href: '/sellerDashboard/products' },
-    { name: 'Flash Sales', icon: Flashlight, href: '/sellerDashboard/users' },
-    { name: 'Orders', icon: ListOrdered, href: '/sellerDashboard/categories' },
-    { name: 'Analytics', icon: BarChart3, href: '#/analytics' },
+    { name: 'Flash Sales', icon: Zap, href: '/sellerDashboard/flashSales' },
+    { name: 'Orders', icon: ListOrdered, href: '/sellerDashboard/orders' },
+    { name: 'Analytics', icon: BarChart3, href: '/sellerDashboard/analytics' },
     // { name: 'Promotions', icon: Tag, href: '#/promotions' },
 ];
 
