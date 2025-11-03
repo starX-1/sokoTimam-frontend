@@ -214,7 +214,7 @@ const Header = () => {
             {isMobileMenuOpen && (
                 <div className="sm:hidden absolute top-full left-0 w-full bg-white border-t shadow-2xl pb-4 z-20">
                     <div className="p-4 space-y-3">
-                        <h3 className="text-lg font-bold text-orange-600 mb-2 border-b pb-2">Categories</h3>
+                        {/* <h3 className="text-lg font-bold text-orange-600 mb-2 border-b pb-2">Categories</h3>
                         {categories.map((category) => (
                             <a
                                 key={`mobile-${category.name}`}
@@ -227,7 +227,7 @@ const Header = () => {
                         ))}
                         <a href="#" className="block py-2 text-orange-600 font-bold border-b border-gray-100 transition">
                             View All Categories
-                        </a>
+                        </a> */}
                         <div className="pt-4 space-y-2">
                             <h3 className="text-lg font-bold text-gray-700 mb-2 border-b pb-2">Account & Info</h3>
                             <a href="#" className="block py-1 text-gray-700 hover:text-orange-600 transition">
