@@ -15,6 +15,16 @@ class Orders {
         const response = await instance.get(`/order/user/${userId}`);
         return response.data;
     }
+    async getSellerOrders(sellerId, token) {
+        const response = await instance.get(`/order/seller/${sellerId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+        return response.data;
+    }
 }
 
 export default new Orders();

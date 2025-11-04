@@ -1,6 +1,9 @@
 'use client'
 import { useEffect, useState } from 'react';
 import { Search, Package, Check, X, Eye, Truck } from 'lucide-react';
+import { getSession } from 'next-auth/react';
+import Orders from '../../api/Orders/api'
+import { useShop } from '../../Hooks/ShopContext';
 
 const SellerOrdersPage = () => {
     const [orders, setOrders] = useState([]);
@@ -9,108 +12,68 @@ const SellerOrdersPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [user, setUser] = useState(null);
+    const { shops } = useShop();
 
-    // Mock orders data
     useEffect(() => {
-        setIsLoading(true);
-        setTimeout(() => {
-            setOrders([
-                {
-                    id: 'ORD-001',
-                    customerName: 'John Kariuki',
-                    customerEmail: 'john@example.com',
-                    customerPhone: '+254712345678',
-                    orderDate: '2025-10-31T14:30:00',
-                    paymentStatus: 'paid',
-                    shippingStatus: 'pending',
-                    totalAmount: '12,450',
-                    itemCount: 3,
-                    items: [
-                        { name: 'Premium Beef Steak', quantity: 2, price: '1,500' },
-                        { name: 'Fresh Tomatoes', quantity: 1, price: '450' },
-                    ],
-                    shippingAddress: '123 Kiambu Road, Nairobi',
-                    notes: 'Please handle with care',
-                },
-                {
-                    id: 'ORD-002',
-                    customerName: 'Sarah Njoroge',
-                    customerEmail: 'sarah@example.com',
-                    customerPhone: '+254723456789',
-                    orderDate: '2025-10-30T10:15:00',
-                    paymentStatus: 'paid',
-                    shippingStatus: 'shipped',
-                    totalAmount: '8,900',
-                    itemCount: 2,
-                    items: [
-                        { name: 'Maasai Shuka Blanket', quantity: 1, price: '3,000' },
-                        { name: 'Beaded Bracelet', quantity: 5, price: '600' },
-                    ],
-                    shippingAddress: '456 Westlands Avenue, Nairobi',
-                    notes: 'Express delivery',
-                    shippedDate: '2025-10-31T08:00:00',
-                },
-                {
-                    id: 'ORD-003',
-                    customerName: 'David Mwangi',
-                    customerEmail: 'david@example.com',
-                    customerPhone: '+254734567890',
-                    orderDate: '2025-10-29T16:45:00',
-                    paymentStatus: 'paid',
-                    shippingStatus: 'pending',
-                    totalAmount: '5,650',
-                    itemCount: 2,
-                    items: [
-                        { name: 'Organic Kale Bundle', quantity: 3, price: '250' },
-                        { name: 'Fresh Lettuce', quantity: 2, price: '200' },
-                    ],
-                    shippingAddress: '789 Langata Road, Nairobi',
-                    notes: '',
-                },
-                {
-                    id: 'ORD-004',
-                    customerName: 'Grace Kipchoge',
-                    customerEmail: 'grace@example.com',
-                    customerPhone: '+254745678901',
-                    orderDate: '2025-10-28T09:20:00',
-                    paymentStatus: 'paid',
-                    shippingStatus: 'shipped',
-                    totalAmount: '15,200',
-                    itemCount: 4,
-                    items: [
-                        { name: 'Artisanal Soap Bar', quantity: 10, price: '600' },
-                        { name: 'Shea Butter Lotion', quantity: 5, price: '800' },
-                    ],
-                    shippingAddress: '321 Valley Road, Nairobi',
-                    notes: 'Fragile - beauty products',
-                    shippedDate: '2025-10-29T11:30:00',
-                },
-                {
-                    id: 'ORD-005',
-                    customerName: 'Peter Ochieng',
-                    customerEmail: 'peter@example.com',
-                    customerPhone: '+254756789012',
-                    orderDate: '2025-10-27T13:00:00',
-                    paymentStatus: 'paid',
-                    shippingStatus: 'pending',
-                    totalAmount: '22,800',
-                    itemCount: 5,
-                    items: [
-                        { name: 'Premium Beef Steak', quantity: 3, price: '1,500' },
-                        { name: 'Chicken Breast', quantity: 2, price: '1,200' },
-                        { name: 'Fresh Vegetables Mix', quantity: 1, price: '800' },
-                    ],
-                    shippingAddress: '654 Upper Hill, Nairobi',
-                    notes: 'Keep refrigerated',
-                },
-            ]);
-            setIsLoading(false);
-        }, 500);
+        const fetchUserData = async () => {
+            const session = await getSession();
+            setUser(session?.user || null);
+        };
+        fetchUserData();
     }, []);
+
+    // Fetch seller orders from backend 
+    useEffect(() => {
+        const fetchOrders = async () => {
+            if (!shops?.[0]?.sellerId || !user?.accessToken) return;
+
+            try {
+                setIsLoading(true);
+                const response = await Orders.getSellerOrders(shops[0].sellerId, user.accessToken);
+                console.log('Seller Orders Response:', response);
+
+
+                if (response?.data) {
+                    // Transform backend data to match component expectations
+                    const transformedOrders = response.data.map(order => ({
+                        id: `ORD-${String(order.id).padStart(3, '0')}`,
+                        orderId: order.id,
+                        customerName: 'Customer', // You may need to add this to backend
+                        customerEmail: 'customer@example.com', // You may need to add this to backend
+                        customerPhone: 'N/A', // You may need to add this to backend
+                        orderDate: order.createdAt,
+                        paymentStatus: order.paymentStatus,
+                        shippingStatus: order.status,
+                        totalAmount: order.totalAmount,
+                        itemCount: order.items?.length || 0,
+                        items: order.items?.map(item => ({
+                            name: `Product #${item.productId}`,
+                            quantity: item.quantity,
+                            price: item.price,
+                            orderItemId: item.orderItemId
+                        })) || [],
+                        shippingAddress: order.shippingAddress,
+                        notes: '',
+                        shippedDate: order.updatedAt,
+                        userId: order.userId
+                    }));
+
+                    setOrders(transformedOrders);
+                }
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchOrders();
+    }, [shops, user]);
 
     const handleShippingStatusChange = (orderId, newStatus) => {
         setOrders(orders.map(order =>
-            order.id === orderId
+            order.orderId === orderId
                 ? {
                     ...order,
                     shippingStatus: newStatus,
@@ -127,16 +90,36 @@ const SellerOrdersPage = () => {
     };
 
     const getShippingStatusStyles = (status) => {
-        switch (status) {
+        switch (status?.toLowerCase()) {
             case 'shipped':
                 return 'text-green-700 bg-green-100';
             case 'pending':
                 return 'text-yellow-700 bg-yellow-100';
             case 'cancelled':
                 return 'text-red-700 bg-red-100';
+            case 'delivered':
+                return 'text-blue-700 bg-blue-100';
             default:
                 return 'text-gray-700 bg-gray-100';
         }
+    };
+
+    const getPaymentStatusStyles = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'paid':
+                return 'text-green-700 bg-green-100';
+            case 'unpaid':
+                return 'text-red-700 bg-red-100';
+            case 'pending':
+                return 'text-yellow-700 bg-yellow-100';
+            default:
+                return 'text-gray-700 bg-gray-100';
+        }
+    };
+
+    const formatCurrency = (amount) => {
+        const num = parseFloat(amount) || 0;
+        return num.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     };
 
     const filteredOrders = orders.filter((order) => {
@@ -144,7 +127,7 @@ const SellerOrdersPage = () => {
         const matchesSearch =
             order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
             order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase());
+            order.shippingAddress.toLowerCase().includes(searchTerm.toLowerCase());
         return matchesStatus && matchesSearch;
     });
 
@@ -156,14 +139,14 @@ const SellerOrdersPage = () => {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.649z"></path>
                     </svg>
-                    Loading...
+                    Loading Orders...
                 </p>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 p-4 md:p-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                 <div>
@@ -171,7 +154,7 @@ const SellerOrdersPage = () => {
                         <Package className="w-8 h-8 text-orange-600" />
                         Orders Management
                     </h2>
-                    <p className="text-gray-600 text-sm mt-1">View and manage all paid orders from your shop</p>
+                    <p className="text-gray-600 text-sm mt-1">View and manage all orders from your shop</p>
                 </div>
             </div>
 
@@ -191,32 +174,34 @@ const SellerOrdersPage = () => {
                 </div>
                 <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 shadow-sm border border-purple-200">
                     <p className="text-gray-600 text-sm font-medium">Total Revenue</p>
-                    <p className="text-2xl font-bold text-purple-700 mt-1">KSH {orders.reduce((acc, o) => acc + parseInt(o.totalAmount.replace(',', '')), 0).toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-purple-700 mt-1">KSH {formatCurrency(orders.reduce((acc, o) => acc + parseFloat(o.totalAmount), 0))}</p>
                 </div>
             </div>
 
             {/* Main Table */}
             <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
                 {/* Search and Filter */}
-                <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
+                <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0 gap-3">
                     <div className="relative w-full md:w-80">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Search by order ID, customer name..."
+                            placeholder="Search by order ID, address..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full py-2 pl-10 pr-4 border border-gray-200 rounded-xl text-sm focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full py-2 pl-10 pr-4 border border-gray-200 rounded-xl text-sm focus:ring-orange-500 focus:border-orange-500 outline-none"
                         />
                     </div>
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="w-full md:w-48 py-2 px-4 border border-gray-200 rounded-xl text-sm focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full md:w-48 py-2 px-4 border border-gray-200 rounded-xl text-sm focus:ring-orange-500 focus:border-orange-500 outline-none"
                     >
                         <option value="all">All Status</option>
-                        <option value="pending">Pending Shipment</option>
+                        <option value="pending">Pending</option>
                         <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
                     </select>
                 </div>
 
@@ -225,11 +210,11 @@ const SellerOrdersPage = () => {
                     <thead className="bg-gray-50">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order Date</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shipping Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shipping</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
@@ -240,17 +225,11 @@ const SellerOrdersPage = () => {
                             </tr>
                         ) : (
                             filteredOrders.map((order) => (
-                                <tr key={order.id} className="hover:bg-gray-50 transition">
+                                <tr key={order.orderId} className="hover:bg-gray-50 transition">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                                         <div className="flex items-center space-x-2">
                                             <Package className="w-4 h-4 text-orange-600" />
                                             <span>{order.id}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        <div>
-                                            <p className="font-medium">{order.customerName}</p>
-                                            <p className="text-xs text-gray-500">{order.customerEmail}</p>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
@@ -262,7 +241,12 @@ const SellerOrdersPage = () => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
-                                        KSH {order.totalAmount}
+                                        KSH {formatCurrency(order.totalAmount)}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getPaymentStatusStyles(order.paymentStatus)}`}>
+                                            {order.paymentStatus}
+                                        </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getShippingStatusStyles(order.shippingStatus)}`}>
@@ -313,28 +297,45 @@ const SellerOrdersPage = () => {
                         </div>
 
                         <div className="p-6 space-y-6">
-                            {/* Customer Information */}
+                            {/* Order Status Overview */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <p className="text-sm text-gray-600 font-medium">Payment Status</p>
+                                    <span className={`px-3 py-1 mt-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getPaymentStatusStyles(selectedOrder.paymentStatus)}`}>
+                                        {selectedOrder.paymentStatus}
+                                    </span>
+                                </div>
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <p className="text-sm text-gray-600 font-medium">Shipping Status</p>
+                                    <span className={`px-3 py-1 mt-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getShippingStatusStyles(selectedOrder.shippingStatus)}`}>
+                                        {selectedOrder.shippingStatus === 'shipped' && <Truck className="w-3 h-3 mr-1" />}
+                                        {selectedOrder.shippingStatus}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Shipping Address */}
                             <div>
-                                <h4 className="text-lg font-semibold text-gray-800 mb-3">Customer Information</h4>
-                                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                                    <p><span className="font-medium text-gray-700">Name:</span> {selectedOrder.customerName}</p>
-                                    <p><span className="font-medium text-gray-700">Email:</span> {selectedOrder.customerEmail}</p>
-                                    <p><span className="font-medium text-gray-700">Phone:</span> {selectedOrder.customerPhone}</p>
-                                    <p><span className="font-medium text-gray-700">Address:</span> {selectedOrder.shippingAddress}</p>
+                                <h4 className="text-lg font-semibold text-gray-800 mb-3">Shipping Address</h4>
+                                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                    <p className="text-gray-700">{selectedOrder.shippingAddress}</p>
                                 </div>
                             </div>
 
                             {/* Order Items */}
                             <div>
                                 <h4 className="text-lg font-semibold text-gray-800 mb-3">Order Items</h4>
-                                <div className="space-y-2 bg-gray-50 rounded-lg p-4">
+                                <div className="space-y-2 bg-gray-50 rounded-lg p-4 border border-gray-200">
                                     {selectedOrder.items.map((item, idx) => (
-                                        <div key={idx} className="flex justify-between items-center pb-2 border-b border-gray-200 last:border-b-0">
+                                        <div key={idx} className="flex justify-between items-center pb-3 border-b border-gray-200 last:border-b-0 last:pb-0">
                                             <div>
                                                 <p className="font-medium text-gray-900">{item.name}</p>
-                                                <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                                                <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
                                             </div>
-                                            <p className="font-semibold text-gray-900">KSH {item.price}</p>
+                                            <div className="text-right">
+                                                <p className="font-semibold text-gray-900">KSH {formatCurrency(item.price)}</p>
+                                                <p className="text-xs text-gray-500">per unit</p>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -343,73 +344,52 @@ const SellerOrdersPage = () => {
                             {/* Order Summary */}
                             <div>
                                 <h4 className="text-lg font-semibold text-gray-800 mb-3">Order Summary</h4>
-                                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-3">
                                     <div className="flex justify-between text-gray-700">
                                         <span>Order Date:</span>
                                         <span className="font-medium">{formatDate(selectedOrder.orderDate)}</span>
                                     </div>
-                                    <div className="flex justify-between text-gray-700 border-t border-gray-200 pt-2 mt-2">
+                                    <div className="flex justify-between text-gray-700">
+                                        <span>Last Updated:</span>
+                                        <span className="font-medium">{formatDate(selectedOrder.shippedDate)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-700 border-t border-gray-200 pt-3 mt-3">
                                         <span className="font-semibold">Total Amount:</span>
-                                        <span className="font-bold text-green-600 text-lg">KSH {selectedOrder.totalAmount}</span>
+                                        <span className="font-bold text-green-600 text-lg">KSH {formatCurrency(selectedOrder.totalAmount)}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Special Notes */}
-                            {selectedOrder.notes && (
+                            {/* Shipping Status Management */}
+                            {selectedOrder.paymentStatus === 'paid' && (
                                 <div>
-                                    <h4 className="text-lg font-semibold text-gray-800 mb-3">Special Notes</h4>
-                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                        <p className="text-gray-700">{selectedOrder.notes}</p>
+                                    <h4 className="text-lg font-semibold text-gray-800 mb-3">Update Shipping Status</h4>
+                                    <div className="space-y-3">
+                                        {selectedOrder.shippingStatus === 'pending' ? (
+                                            <button
+                                                onClick={() => {
+                                                    handleShippingStatusChange(selectedOrder.orderId, 'shipped');
+                                                    setShowModal(false);
+                                                }}
+                                                className="w-full bg-green-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-green-700 transition flex items-center justify-center gap-2"
+                                            >
+                                                <Check className="w-5 h-5" />
+                                                Mark as Shipped
+                                            </button>
+                                        ) : (
+                                            <div className="text-center py-3 bg-green-50 border border-green-200 rounded-lg">
+                                                <p className="text-green-700 font-medium">✓ Order shipped on {formatDate(selectedOrder.shippedDate)}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
 
-                            {/* Shipping Status Management */}
-                            <div>
-                                <h4 className="text-lg font-semibold text-gray-800 mb-3">Update Shipping Status</h4>
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4">
-                                        <div>
-                                            <p className="font-medium text-gray-900">Current Status:</p>
-                                            <span className={`px-3 py-1 mt-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getShippingStatusStyles(selectedOrder.shippingStatus)}`}>
-                                                {selectedOrder.shippingStatus === 'shipped' && <Truck className="w-3 h-3 mr-1" />}
-                                                {selectedOrder.shippingStatus}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {selectedOrder.shippingStatus === 'pending' ? (
-                                        <button
-                                            onClick={() => {
-                                                handleShippingStatusChange(selectedOrder.id, 'shipped');
-                                                setShowModal(false);
-                                            }}
-                                            className="w-full bg-green-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-green-700 transition flex items-center justify-center gap-2"
-                                        >
-                                            <Check className="w-5 h-5" />
-                                            Mark as Shipped
-                                        </button>
-                                    ) : (
-                                        <div className="text-center py-3 bg-green-50 border border-green-200 rounded-lg">
-                                            <p className="text-green-700 font-medium">✓ Order shipped on {formatDate(selectedOrder.shippedDate)}</p>
-                                        </div>
-                                    )}
-
-                                    {selectedOrder.shippingStatus === 'shipped' && (
-                                        <button
-                                            onClick={() => {
-                                                handleShippingStatusChange(selectedOrder.id, 'pending');
-                                                setShowModal(false);
-                                            }}
-                                            className="w-full bg-yellow-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-yellow-700 transition flex items-center justify-center gap-2"
-                                        >
-                                            <X className="w-5 h-5" />
-                                            Mark as Not Yet Shipped
-                                        </button>
-                                    )}
+                            {selectedOrder.paymentStatus === 'unpaid' && (
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                                    <p className="text-red-700 font-medium">⚠ Payment not received yet. Order cannot be shipped.</p>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>

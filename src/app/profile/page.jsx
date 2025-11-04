@@ -6,7 +6,7 @@ import MyOrdersPanel from "../components/OrdersPanel";
 import Header from "../components/header";
 import Footer from "../components/Footer";
 // import Orders from '../api/Orders/api'
-import { getSession } from "next-auth/react";
+import { getSession, signOut } from "next-auth/react";
 import useUserOrders from "../Hooks/UseUserOrders";
 
 const ProfilePage = () => {
@@ -29,7 +29,7 @@ const ProfilePage = () => {
     console.log('User Orders:', orders);
 
     const handleLogout = () => {
-        alert('Logged out successfully');
+        signOut({ callbackUrl: '/' });
     };
 
     const renderActiveTabContent = () => {
