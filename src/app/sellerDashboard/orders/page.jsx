@@ -1,8 +1,10 @@
 'use client'
-import { useEffect, useState } from 'react';
-import { Search, Package, Check, X, Eye, Truck } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { Search, Package, Check, X, Eye, Truck, User } from 'lucide-react';
 import { getSession } from 'next-auth/react';
 import Orders from '../../api/Orders/api'
+import Users from '../../api/user/api'
+import Products from '../../api/products/api'
 import { useShop } from '../../Hooks/ShopContext';
 
 const SellerOrdersPage = () => {
@@ -14,6 +16,7 @@ const SellerOrdersPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [user, setUser] = useState(null);
     const { shops } = useShop();
+    const hasEnrichedOrders = useRef(false);
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -31,17 +34,15 @@ const SellerOrdersPage = () => {
             try {
                 setIsLoading(true);
                 const response = await Orders.getSellerOrders(shops[0].sellerId, user.accessToken);
-                console.log('Seller Orders Response:', response);
-
 
                 if (response?.data) {
                     // Transform backend data to match component expectations
                     const transformedOrders = response.data.map(order => ({
                         id: `ORD-${String(order.id).padStart(3, '0')}`,
                         orderId: order.id,
-                        customerName: 'Customer', // You may need to add this to backend
-                        customerEmail: 'customer@example.com', // You may need to add this to backend
-                        customerPhone: 'N/A', // You may need to add this to backend
+                        customerName: 'Customer',
+                        customerEmail: 'customer@example.com',
+                        customerPhone: 'N/A',
                         orderDate: order.createdAt,
                         paymentStatus: order.paymentStatus,
                         shippingStatus: order.status,
@@ -51,15 +52,18 @@ const SellerOrdersPage = () => {
                             name: `Product #${item.productId}`,
                             quantity: item.quantity,
                             price: item.price,
-                            orderItemId: item.orderItemId
+                            orderItemId: item.orderItemId,
+                            productId: item.productId
                         })) || [],
                         shippingAddress: order.shippingAddress,
                         notes: '',
                         shippedDate: order.updatedAt,
-                        userId: order.userId
+                        userId: order.userId,
+                        enriched: false
                     }));
 
                     setOrders(transformedOrders);
+                    hasEnrichedOrders.current = false; // Reset flag when new orders arrive
                 }
             } catch (error) {
                 console.error('Error fetching orders:', error);
@@ -70,6 +74,66 @@ const SellerOrdersPage = () => {
 
         fetchOrders();
     }, [shops, user]);
+
+    // Fetch user and product details for each order - runs ONCE after initial fetch
+    useEffect(() => {
+        const fetchOrderDetails = async () => {
+            if (!user?.accessToken || orders.length === 0 || hasEnrichedOrders.current) return;
+
+            try {
+                setIsLoading(true);
+                const promises = orders.map(async order => {
+                    try {
+                        // Fetch user details
+                        const userResponse = await Users.getUserById(order.userId);
+
+                        // Fetch product details for each item
+                        const productResponses = await Promise.all(
+                            order.items.map(async item => {
+                                try {
+                                    return await Products.getProductWithImages(item.productId);
+                                } catch (error) {
+                                    console.error(`Error fetching product ${item.productId}:`, error);
+                                    return null;
+                                }
+                            })
+                        );
+
+                        return {
+                            ...order,
+                            customerName: userResponse?.user?.firstname || 'Unknown Customer',
+                            customerEmail: userResponse?.user?.email || 'N/A',
+                            customerPhone: userResponse?.user?.phone || 'N/A',
+                            items: order.items.map((item, idx) => ({
+                                ...item,
+                                name: productResponses[idx]?.name || `Product #${item.productId}`,
+                                price: productResponses[idx]?.price || item.price,
+                                image: productResponses[idx]?.images?.[0] || null
+                            })),
+                            enriched: true
+                        };
+                    } catch (error) {
+                        console.error(`Error fetching details for order ${order.orderId}:`, error);
+                        return { ...order, enriched: true };
+                    }
+                });
+
+                const updatedOrders = await Promise.all(promises);
+                setOrders(updatedOrders);
+                hasEnrichedOrders.current = true; // Prevent re-running
+            } catch (error) {
+                console.error('Error fetching order details:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchOrderDetails();
+    }, [user?.accessToken, orders.length]); // Changed dependency
+
+    console.log('Orders:', orders);
+
+
 
     const handleShippingStatusChange = (orderId, newStatus) => {
         setOrders(orders.map(order =>
@@ -189,7 +253,7 @@ const SellerOrdersPage = () => {
                             placeholder="Search by order ID, address..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full py-2 pl-10 pr-4 border border-gray-200 rounded-xl text-sm focus:ring-orange-500 focus:border-orange-500 outline-none"
+                            className="w-full py-2 pl-10 pr-4 border border-gray-200 text-gray-700 rounded-xl text-sm focus:ring-orange-500 focus:border-orange-500 outline-none"
                         />
                     </div>
                     <select
@@ -210,6 +274,7 @@ const SellerOrdersPage = () => {
                     <thead className="bg-gray-50">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order Date</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
@@ -230,6 +295,15 @@ const SellerOrdersPage = () => {
                                         <div className="flex items-center space-x-2">
                                             <Package className="w-4 h-4 text-orange-600" />
                                             <span>{order.id}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                        <div className="flex items-center space-x-2">
+                                            <User className="w-4 h-4 text-orange-600" />
+                                            <div className="flex flex-col">
+                                                <span>{order.customerName}</span>
+                                                <p>{order.customerEmail}</p>
+                                            </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
@@ -325,14 +399,28 @@ const SellerOrdersPage = () => {
                             {/* Order Items */}
                             <div>
                                 <h4 className="text-lg font-semibold text-gray-800 mb-3">Order Items</h4>
-                                <div className="space-y-2 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                <div className="space-y-4 bg-gray-50 rounded-lg p-4 border border-gray-200">
                                     {selectedOrder.items.map((item, idx) => (
-                                        <div key={idx} className="flex justify-between items-center pb-3 border-b border-gray-200 last:border-b-0 last:pb-0">
-                                            <div>
+                                        <div key={idx} className="flex gap-4 pb-4 border-b border-gray-200 last:border-b-0 last:pb-0">
+                                            {/* Product Image */}
+                                            {item.image && (
+                                                <div className="flex-shrink-0">
+                                                    <img
+                                                        src={item.image.imageUrl}
+                                                        alt={item.name}
+                                                        className="w-16 h-16 object-cover rounded-lg border border-gray-300"
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* Product Details */}
+                                            <div className="flex-1">
                                                 <p className="font-medium text-gray-900">{item.name}</p>
-                                                <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                                                <p className="text-sm text-gray-600 mt-1">Quantity: {item.quantity}</p>
                                             </div>
-                                            <div className="text-right">
+
+                                            {/* Price */}
+                                            <div className="text-right flex-shrink-0">
                                                 <p className="font-semibold text-gray-900">KSH {formatCurrency(item.price)}</p>
                                                 <p className="text-xs text-gray-500">per unit</p>
                                             </div>
