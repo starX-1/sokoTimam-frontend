@@ -3,7 +3,6 @@ import instance from "../../Hooks/axios";
 class Users {
     async getAll(user) {
         try {
-            // console.log(user.user.accessToken, "user token")
             const response = await instance.get('/user', {
                 headers: {
                     Authorization: `Bearer ${user.user.accessToken}`
@@ -11,7 +10,7 @@ class Users {
             })
             return response.data
         } catch (error) {
-            console.log(error)
+            console.error(error)
             return null
         }
     }
@@ -20,7 +19,7 @@ class Users {
             const response = await instance.get(`/user/${id}`)
             return response.data
         } catch (error) {
-            console.log(error)
+            console.error(error)
             return null
         }
     }
@@ -29,7 +28,7 @@ class Users {
             const response = await instance.put(`/user/${id}`, data)
             return response.data
         } catch (error) {
-            console.log(error)
+            console.error(error)
             return null
         }
     }
@@ -38,7 +37,7 @@ class Users {
             const response = await instance.delete(`/user/${id}`)
             return response.data
         } catch (error) {
-            console.log(error)
+            console.error(error)
             return null
         }
     }

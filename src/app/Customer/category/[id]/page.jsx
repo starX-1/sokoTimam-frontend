@@ -27,15 +27,12 @@ const CategoryProductsPage = () => {
                 const productResponse = await Categories.getProductsByCategory(categoryId);
                 const productsData = productResponse?.products || [];
 
-                console.log('Fetched products:', productsData);
 
                 // 2️⃣ Fetch images for each product concurrently using Promise.all
                 const enrichedProducts = await Promise.all(
                     productsData.map(async (product) => {
                         try {
-                            console.log('Fetching images for product ID:', product.id);
                             const imageData = await Products.getProductImagesById(product.id);
-                            console.log(`Fetched images for product ID ${product.id}:`, imageData);
 
                             return {
                                 ...product,
@@ -56,7 +53,6 @@ const CategoryProductsPage = () => {
 
                 // 3️⃣ Fetch the category name for the title
                 const categoryResponse = await Categories.getCategoryById(categoryId);
-                console.log('Fetched category:', categoryResponse);
 
                 setCategoryName(categoryResponse?.category?.name || 'Products');
             } catch (error) {

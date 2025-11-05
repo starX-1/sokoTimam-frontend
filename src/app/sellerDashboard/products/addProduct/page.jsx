@@ -72,7 +72,6 @@ const AddProductView = ({ onViewChange }) => {
                 // Fetch shops
                 const shopsResponse = await sellers.getAllMyShops(sellerData.id, session.user.accessToken);
                 // const shopsData = await shopsResponse.json();
-                // console.log(shopsResponse)
                 setShops(shopsResponse.shops);
 
                 // Fetch categories
@@ -81,7 +80,6 @@ const AddProductView = ({ onViewChange }) => {
                 // filter out categories with parentId because they are sub categories by default 
                 const filteredCategories = categoriesResponse.categories.filter(category => !category.parentId);
                 setCategories(filteredCategories);
-                console.log("retrieved categories", categoriesResponse.categories)
                 setEveryCat(categoriesResponse.categories);
                 // 
                 // setCategories(categoriesResponse.categories);
@@ -98,15 +96,11 @@ const AddProductView = ({ onViewChange }) => {
     // Filter subcategories when category changes
     useEffect(() => {
         if (productData.categoryId) {
-            console.log(productData)
             const fetchSubcategories = async () => {
                 try {
-                    // console.log("second fetch", everyCat)
                     // filter out the categories whose parentId equal the selected category id 
                     const filteredCategories = everyCat.filter(category => category.parentId === parseInt(productData.categoryId));
-                    console.log("filtered categories", filteredCategories)
                     setSubcategories(filteredCategories);
-                    console.log(filteredCategories)
                 } catch (error) {
                     console.error('Error fetching subcategories:', error);
                     setSubcategories([]);

@@ -26,7 +26,6 @@ const ProfilePage = () => {
     const { orders, loadingOrders, ordersError } = useUserOrders(user);
 
 
-    console.log('User Orders:', orders);
 
     const handleLogout = () => {
         signOut({ callbackUrl: '/' });

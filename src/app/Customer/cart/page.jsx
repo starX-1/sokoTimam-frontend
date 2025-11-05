@@ -101,7 +101,6 @@ const CartPage = () => {
         }
     }, [loggedInUser]);
 
-    // console.log(loggedInUser, " Logged in user")
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -162,7 +161,6 @@ const CartPage = () => {
             };
 
             const stkRes = await CheckoutAPI.innitiateStkPush(stkPushPayload);
-            console.log("STK Push Response:", stkRes);
 
             // accept a couple of possible success shapes
             const successMessage = (stkRes?.message ?? "").toLowerCase();

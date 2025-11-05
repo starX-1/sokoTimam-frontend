@@ -140,7 +140,6 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
                 ownerId: shop.ownerId
             };
 
-            console.log('Submit Data:', submitData);
 
             await onSave(shop.id, submitData);
             onClose();
@@ -455,10 +454,9 @@ const ShopsView = () => {
             try {
                 const adminSession = await getSession();
                 const res = await Shops.getAllShops(adminSession.user.accessToken);
-                console.log(res);
                 setShops(res.shops);
             } catch (error) {
-                console.log(error);
+                console.error('Error fetching shops:', error);
             }
         }
         fetchShops();
@@ -510,7 +508,6 @@ const ShopsView = () => {
             // Call your API to update the shop
             const res = await Shops.updateShop(shopId, updatedData, adminSession.user.accessToken);
 
-            console.log(res)
 
             // Update local state
             // setShops(shops.map(shop =>
@@ -522,7 +519,6 @@ const ShopsView = () => {
             setShops(res2.shops);
 
             setIsEditModalOpen(false);
-            console.log('Shop updated:', shopId, updatedData);
         } catch (error) {
             console.error('Error updating shop:', error);
         }
@@ -536,12 +532,10 @@ const ShopsView = () => {
         return matchesSearch && matchesStatus;
     });
     const handleActivate = async (shop) => {
-        console.log('Activating shop:', shop.id);
         try {
             const adminSession = await getSession();
             const updatedData = { status: 'active' };
             const res = await Shops.updateShop(shop.id, updatedData, adminSession.user.accessToken);
-            console.log('Shop activated:', res);
             toast.success('Shop activated successfully!');
             // refetch shops 
             const res2 = await Shops.getAllShops(adminSession.user.accessToken);
@@ -551,12 +545,10 @@ const ShopsView = () => {
         }
     }
     const handleSuspend = async (shop) => {
-        console.log('Suspending shop:', shop.id);
         try {
             const adminSession = await getSession();
             const updatedData = { status: 'suspended' };
             const res = await Shops.updateShop(shop.id, updatedData, adminSession.user.accessToken);
-            console.log('Shop suspended:', res);
             toast.success('Shop suspended successfully!');
 
             // refetch shops 

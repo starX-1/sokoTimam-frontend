@@ -26,7 +26,6 @@ export const ShopProvider = ({ children }) => {
                     session.user.accessToken
                 );
 
-                console.log('Shops auto-loaded to context:', res.shops);
                 setShops(res.shops || []);
             } catch (err) {
                 console.error('Error auto-loading shops:', err);

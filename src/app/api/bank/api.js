@@ -6,7 +6,7 @@ class Accounts {
             const response = await instance.get('/bank')
             return response.data
         } catch (error) {
-            console.log(error)
+            console.error(error)
         }
     }
     async createAccount(data) {
@@ -14,7 +14,7 @@ class Accounts {
             const response = await instance.post('/bank/account', data)
             return response.data
         } catch (error) {
-            console.log(error)
+            console.error(error)
         }
     }
     async deleteAccount(id) {
@@ -22,7 +22,7 @@ class Accounts {
             const response = await instance.delete(`/bank/${id}`)
             return response.data
         } catch (error) {
-            console.log(error)
+            console.error(error)
         }
     }
     async getBySHopId(shopId) {
@@ -30,7 +30,7 @@ class Accounts {
             const response = await instance.get(`/bank/details/shop/${shopId}`)
             return response.data
         } catch (error) {
-            console.log(error)
+            console.error(error)
         }
     }
     async updateAccount(id, data) {
@@ -38,7 +38,7 @@ class Accounts {
             const response = await instance.put(`/bank/account/${id}`, data)
             return response.data
         } catch (error) {
-            console.log(error)
+            console.error(error)
         }
     }
 }

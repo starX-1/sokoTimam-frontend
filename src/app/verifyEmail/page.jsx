@@ -40,13 +40,11 @@ const VerificationPage = ({ onViewChange }) => {
         e.preventDefault();
         if (isCodeComplete) {
             const verificationCode = code.join('');
-            console.log("Verifying code:", verificationCode);
 
             // Mock verification success
             alert('Account verified successfully!');
             onViewChange('login');
         } else {
-            console.log("Please enter the complete 6-digit code.");
         }
     };
 

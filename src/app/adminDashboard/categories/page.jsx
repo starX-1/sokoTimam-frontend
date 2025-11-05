@@ -60,7 +60,6 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
         fetchShops();
     }, []);
 
-    console.log('Parent Categories:', parentCategories);
 
 
     const handleSubmit = async (e) => {
@@ -82,7 +81,6 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
         }
 
         // Mock success for demonstration
-        console.log(`Submitting new category: Name='${name}'`);
         // await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
         setIsSaving(false);
         toast.success(`Category/Subcategory '${name}' created!`);
@@ -362,14 +360,12 @@ const CategoriesView = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                                             <button
-                                                onClick={() => console.log(`Editing Category ID: ${category.id}`)}
                                                 className="text-orange-600 hover:text-orange-900 p-1 rounded-full hover:bg-orange-100 transition"
                                                 title="Edit Category"
                                             >
                                                 <Edit className="w-4 h-4" />
                                             </button>
                                             <button
-                                                onClick={() => console.log(`Deleting Category ID: ${category.id}`)}
                                                 className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100 transition"
                                                 title="Delete Category"
                                             >

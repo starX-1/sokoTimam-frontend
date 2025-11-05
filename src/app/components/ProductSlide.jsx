@@ -178,7 +178,6 @@ const ProductCarousel = () => {
         if (!childrenCategories[categoryId]) {
             try {
                 const response = await Categories.getCategoryChildren(categoryId);
-                console.log(response)
                 setChildrenCategories(prev => ({
                     ...prev,
                     [categoryId]: response.category.children || []
@@ -384,7 +383,6 @@ const ProductCarousel = () => {
                             {/* Conditional "More" Button */}
                             {fetchedCategories.length > 7 && (
                                 <button
-                                    onClick={() => console.log('Handle More Categories Click')}
                                     className="w-full px-3 py-2 flex items-center justify-center space-x-2 bg-gray-50 hover:bg-orange-100 transition text-left text-sm font-semibold text-orange-600"
                                 >
                                     <span>View All ({fetchedCategories.length})</span>

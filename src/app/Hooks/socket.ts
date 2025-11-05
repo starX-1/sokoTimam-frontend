@@ -17,10 +17,7 @@ export const getSocket = () => {
         autoConnect: true,
     });
 
-    // optional debug
-    socket.on('connect', () => {
-        console.log('socket connected', socket?.id);
-    });
+    
     socket.on('connect_error', (err) => {
         console.warn('socket connect_error', err);
     });

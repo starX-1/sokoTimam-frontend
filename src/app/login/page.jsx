@@ -120,7 +120,6 @@ const LoginPage = ({ onViewChange }) => {
             } else {
                 const session = await getSession();
 
-                console.log(session);
 
                 if (session?.user?.role === "admin") {
                     router.push("/adminDashboard");
@@ -131,7 +130,6 @@ const LoginPage = ({ onViewChange }) => {
                 if (session?.user?.role === "seller") {
                     // get seller details  and store them in session storage
                     const sellerData = await sellers.getSellerByUserId(session.user.id);
-                    // console.log("Seller Data:", sellerData);
                     sessionStorage.setItem("sellerData", JSON.stringify(sellerData.data));
                     // router.push("/sellerDashboard");
                     router.push("/sellerDashboard");
@@ -295,11 +293,9 @@ const SignUpPage = ({ onViewChange }) => {
     const handleSignUp = async (e) => {
         e.preventDefault();
         if (!validateInputs()) return;
-        console.log("Sign Up Data:", signupData);
         setLoading(true);
         try {
             const res = await auth.register(signupData);
-            console.log(res);
             if (res.message === "User created successfully.") {
                 toast.success(res.message);
                 // onViewChange('login');
@@ -310,12 +306,10 @@ const SignUpPage = ({ onViewChange }) => {
             }
         } catch (error) {
             toast.error("something went wrong")
-            console.log(error);
             setLoading(false);
 
         }
         // Placeholder sign-up logic would go here
-        console.log("Attempting sign-up...");
     };
 
     const darkBrown = '#5e382b'; // Darker brown for the left panel

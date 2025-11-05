@@ -95,11 +95,9 @@ const SingleShopView = () => {
         fetchShop();
     }, [shopId]);
 
-    console.log('Fetched shop data:', shop);
     const handleSaveShop = async (id, updatedData) => {
         // Implement the logic to save the updated shop data here.
         // This is where you'd call Shops.updateShop(id, updatedData, token);
-        console.log('Attempting to save shop changes for ID:', id, updatedData);
 
         // Mock success update for local state
         setShop(prev => ({

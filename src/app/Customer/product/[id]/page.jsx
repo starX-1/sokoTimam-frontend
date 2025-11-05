@@ -121,7 +121,6 @@ const ProductDetailPage = () => {
     }
 
     const handleAddToCart = async () => {
-        console.log("Adding to cart", product.id, quantity);
 
         if (!user) {
             setLoginMOdalOpen(true);

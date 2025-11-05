@@ -170,7 +170,6 @@ const EditShopModal = ({ shop, isOpen, onClose, onSave }) => {
                 logoUrl: formData.logoUrl, // Keep existing URL if no new file
             };
 
-            console.log('Submit Data:', submitData);
 
             await onSave(shop.id, submitData);
             onClose();
@@ -527,17 +526,15 @@ const ShopsView = () => {
                 setSeller(sellerData);
                 const res = await sellers.getAllMyShops(sellerData.id, sellerSession.user.accessToken);
                 // const res = await Shops.getAllShops(sellerSession.user.accessToken);
-                console.log(res);
                 setShopsData(res.shops);
                 setShops(res.shops);
             } catch (error) {
-                console.log(error);
+                console.error(error);
             }
         }
         fetchShops();
     }, []);
 
-    console.log("shops to context ", shops)
     const router = useRouter();
 
     const getStatusStyles = (status) => {
@@ -595,14 +592,12 @@ const ShopsView = () => {
             // Call your API to update the shop
             const res = await Shops.updateShop(shopId, formData, sellerSession.user.accessToken);
 
-            console.log(res);
 
             // Refetch shopsData using the correct API call
             const res2 = await sellers.getAllMyShops(seller.id, sellerSession.user.accessToken);
             setShopsData(res2.shopsData);
 
             setIsEditModalOpen(false);
-            console.log('Shop updated:', shopId, updatedData);
         } catch (error) {
             console.error('Error updating shop:', error);
             // Optionally show error toast/message to user
@@ -617,7 +612,6 @@ const ShopsView = () => {
         return matchesSearch && matchesStatus;
     });
 
-    // console.log(seller)
     const handleViewClick = (shop) => {
         router.push(`/sellerDashboard/shops/view/${shop.id}`);
     }

@@ -10,7 +10,7 @@ class Products {
             })
             return response.data
         } catch (error) {
-            console.log(error)
+            console.error(error)
         }
     }
     async getProducts() {
@@ -18,7 +18,7 @@ class Products {
             const response = await instance.get('/product')
             return response.data
         } catch (error) {
-            console.log(error)
+            console.error(error)
         }
     }
     async getProductsInSHop(shopId) {
@@ -26,7 +26,7 @@ class Products {
             const response = await instance.get(`/shop/${shopId}/products`)
             return response.data
         } catch (error) {
-            console.log(error)
+            console.error(error)
         }
     }
     async deleteProduct(id) {
@@ -34,7 +34,7 @@ class Products {
             const response = await instance.delete(`/product/${id}`)
             return response.data
         } catch (error) {
-            console.log(error)
+            console.error(error)
         }
 
     }
@@ -43,7 +43,7 @@ class Products {
             const response = await instance.put(`/product/${id}`, data)
             return response.data
         } catch (error) {
-            console.log(error)
+            console.error(error)
         }
     }
     async getProductWithImages(id){

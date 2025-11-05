@@ -17,7 +17,6 @@ const authOptions = {
                 password: { label: "Password", type: "password" },
             },
             async authorize(credentials) {
-                console.log("authorize() got credentials:", credentials);
 
                 try {
                     const { data } = await api.post("user/login", {
@@ -25,7 +24,6 @@ const authOptions = {
                         password: credentials.password,
                     });
 
-                    console.log("API response:", data);
 
                     const { token, user } = data;
                     if (token && user) {

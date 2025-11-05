@@ -94,7 +94,6 @@ const ProductsView = () => {
         }
     }, [products])
 
-    console.log(shops)
 
     // Function to format KSH currency
     const formatCurrency = (amountString) => {

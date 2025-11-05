@@ -55,7 +55,6 @@ const UsersView = ({ onViewChange }) => {
             const adminSession = await getSession();
             setAdminDetails(adminSession.user);
             const response = await fetchUsers(adminSession)
-            console.log(response)
             setUsers(response.users)
         } catch (error) {
             console.error("Failed to fetch users:", error);
@@ -101,7 +100,6 @@ const UsersView = ({ onViewChange }) => {
             {/* <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                 <h2 className="text-3xl font-bold text-gray-800">User Management</h2>
                 <button
-                    onClick={() => console.log('Add user modal triggered')} // Placeholder for Add User
                     className="mt-4 sm:mt-0 bg-orange-600 text-white px-5 py-2 rounded-xl font-semibold shadow-md hover:bg-orange-700 transition duration-200"
                 >
                     + Add New User

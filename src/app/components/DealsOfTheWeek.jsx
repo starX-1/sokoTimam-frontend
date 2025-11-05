@@ -4,6 +4,7 @@ import DealCard from './DealCard';
 import Products from '../api/products/api';
 import { useRouter } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
+import FlashSales from '../api/flashsale/api'
 
 // Countdown Timer Component
 const CountdownTimer = () => {
@@ -13,7 +14,7 @@ const CountdownTimer = () => {
         const timer = setInterval(() => {
             setTimeLeft(prev => {
                 let { days, hours, minutes, seconds } = prev;
-                
+
                 if (seconds > 0) {
                     seconds--;
                 } else if (minutes > 0) {
@@ -24,7 +25,7 @@ const CountdownTimer = () => {
                     minutes = 59;
                     seconds = 59;
                 }
-                
+
                 return { hours, minutes, seconds };
             });
         }, 1000);
@@ -48,6 +49,19 @@ const DealsOfTheWeek = () => {
     const [deals, setDeals] = useState([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const [flashsale, setFlashsale] = useState([]);
+
+
+    useEffect(() => {
+        const fetchFlashSales = async () => {
+            try {
+                const response = await FlashSales.getFlashSales()
+            } catch (error) {
+
+            }
+        }
+        fetchFlashSales()
+    }, [])
 
     const handleProductClick = (productId) => {
         router.push(`/Customer/product/${productId}`);
@@ -78,7 +92,6 @@ const DealsOfTheWeek = () => {
         const fetchAllProducts = async () => {
             try {
                 const response = await Products.getProducts();
-                console.log("this is the response", response);
 
                 // Get first 6 products for horizontal scroll
                 const firstProducts = response.products.slice(0, 6);
@@ -112,7 +125,6 @@ const DealsOfTheWeek = () => {
         fetchProductImages();
     }, [deals]);
 
-    console.log(deals);
 
     return (
         <section className="bg-white mt-1 rounded rounded-lg py-4 px-4 sm:px-6 lg:px-8 border-b-8 border-gray-100">
@@ -123,13 +135,13 @@ const DealsOfTheWeek = () => {
                         <div className="flex items-center gap-2">
                             <span className="text-xl">🔥</span>
                             <h2 className="text-lg sm:text-xl font-bold text-white">
-                               Deals of the Week
+                                Deals of the Week
                             </h2>
                         </div>
-                        
+
                         {/* <CountdownTimer /> */}
-                        
-                        <button 
+
+                        <button
                             onClick={() => router.push('/deals')}
                             className="flex items-center gap-1 text-white hover:underline text-sm font-medium"
                         >

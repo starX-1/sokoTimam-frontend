@@ -131,7 +131,6 @@ const SellerOrdersPage = () => {
         fetchOrderDetails();
     }, [user?.accessToken, orders.length]); // Changed dependency
 
-    console.log('Orders:', orders);
 
 
 

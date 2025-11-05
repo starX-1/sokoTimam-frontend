@@ -103,7 +103,6 @@ const AddShopView = () => {
         if (type === 'file') {
             const file = target.files && target.files[0];
             if (file) {
-                console.log(`✅ Selected ${name}:`, file);
                 setShopData(prev => ({ ...prev, [name]: file }));
             } else {
                 console.warn(`⚠️ No file selected for ${name}   `);
@@ -167,21 +166,15 @@ const AddShopView = () => {
             // Append the files - FIXED: Now appending the actual File objects
             if (shopData.logoUrl instanceof File) {
                 formData.append("logo", shopData.logoUrl);
-                console.log("Logo file appended:", shopData.logoUrl.name);
             }
             if (shopData.coverUrl instanceof File) {
                 formData.append("cover", shopData.coverUrl);
-                console.log("Cover file appended:", shopData.coverUrl.name);
             }
 
             // Debug: Log FormData contents
-            console.log("FormData contents:");
-            for (let [key, value] of formData.entries()) {
-                console.log(key, value instanceof File ? `File: ${value.name}` : value);
-            }
+            
 
             const res = await Shops.createShop(formData, admin.user.accessToken);
-            console.log("Response:", res);
 
             if (res) {
                 toast.success("Shop created successfully!");

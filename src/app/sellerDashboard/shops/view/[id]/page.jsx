@@ -318,7 +318,6 @@ const SingleShopView = () => {
                 const session = await getSession();
                 const shopData = await Shops.getShopById(shopId, session.user.accessToken);
                 const bankData = await Accounts.getBySHopId(shopId);
-                // console.log('Fetched bank data:', bankData);
                 setSellerBankAccount(bankData.data);
                 setShop(shopData.shop);
             } catch (error) {
@@ -331,10 +330,8 @@ const SingleShopView = () => {
         fetchShop();
     }, [shopId]);
 
-    console.log('Fetched shop data:', shop);
 
     // const handleSaveShop = async (id, updatedData) => {
-    //     console.log('Attempting to save shop changes for ID:', id, updatedData);
 
     //     setShop(prev => ({
     //         ...prev,
@@ -409,13 +406,11 @@ const SingleShopView = () => {
         // { label: "SWIFT Code", value: actualBankAccount.swiftCode || 'N/A', icon: Globe },
     ] : [];
 
-    console.log('Actual bank account details:', actualBankAccount);
     const handleUpdateBankDetails = async (updatedData) => {
         const response = await Accounts.updateAccount(actualBankAccount.id, updatedData);
         if (response.message === 'Bank account updated') {
             toast.success('Bank details updated successfully!');
             const bankData = await Accounts.getBySHopId(shopId);
-            // console.log('Fetched bank data:', bankData);
             setSellerBankAccount(bankData.data);
             
             // setSellerBankAccount([response.data]);
@@ -592,7 +587,6 @@ const SingleShopView = () => {
                             <button
                                 onClick={() => {
                                     // Handle edit bank details
-                                    // console.log('Edit bank details');
                                     setIsEditModalOpen(true);
                                 }}
                                 className="flex items-center gap-2 px-4 py-2 border-2 border-orange-500 text-orange-600 hover:bg-orange-50 font-semibold rounded-lg transition duration-200"

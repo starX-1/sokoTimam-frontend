@@ -91,7 +91,6 @@ const ProductsView = () => {
         }
     }, [products])
 
-    console.log(products)
 
     // Function to format KSH currency
     const formatCurrency = (amountString) => {
@@ -125,7 +124,6 @@ const ProductsView = () => {
                 <Link
                     href="/adminDashboard/products/addProduct"
                     // Replaced router.push with a console log to fix Next.js dependency error
-                    // onClick={() => console.log('Navigation to Add Product Page is triggered.')}
                     className="mt-4 sm:mt-0 bg-orange-600 text-white px-5 py-2 rounded-xl font-semibold shadow-md hover:bg-orange-700 transition duration-200"
                 >
                     + Add New Product
