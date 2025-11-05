@@ -53,7 +53,7 @@ const FlashSalesPage = () => {
       try {
         setIsLoading(true);
         const res = await FlashSales.getSellerFlashSales(shops[0].sellerId, user.accessToken)
-
+console.log(res)
         if (res?.data && Array.isArray(res.data)) {
           // Transform API data to match table structure
           const transformedSales = res.data.map(sale => ({
@@ -99,9 +99,15 @@ const FlashSalesPage = () => {
   };
 
   const getTimeRemaining = (endTime) => {
-    const end = new Date(endTime);
-    const now = new Date();
-    const diff = end - now;
+    // const end = new Date(endTime);
+    // const now = new Date();
+    const diff = new Date(endTime).getTime() - new Date().getTime();
+
+
+    // console.log('end', end)
+    // console.log('now', now)
+
+    console.log('diff', diff)
 
     if (diff <= 0) return 'Ended';
 
@@ -342,6 +348,7 @@ const FlashSalesPage = () => {
     });
     setFormErrors({});
   };
+
 
   if (isLoading) {
     return (
