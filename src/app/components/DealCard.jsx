@@ -1,8 +1,10 @@
-'use client'
-import { ShoppingCart, Heart, Eye } from 'lucide-react';
-import { useState } from 'react';
 
-const DealCard = ({ title, price, originalPrice, discount, rating, reviewCount, imageUrl, onClick }) => {
+// import everyting required 
+import React, { useState } from 'react';
+// import 
+import { Heart, ShoppingCart } from 'lucide-react';
+// DealCard Component
+const DealCard = ({ title, price, originalPrice, discount, rating, reviewCount, imageUrl, onClick, countdown }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     // Generate star rating display
@@ -42,12 +44,6 @@ const DealCard = ({ title, price, originalPrice, discount, rating, reviewCount, 
                 >
                     <Heart size={14} />
                 </button>
-                {/* <button
-                    onClick={(e) => e.stopPropagation()}
-                    className="bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-lg hover:bg-orange-500 hover:text-white transition-all duration-300 hover:scale-110"
-                >
-                    <Eye size={14} />
-                </button> */}
             </div>
 
             {/* Image Container */}
@@ -79,10 +75,17 @@ const DealCard = ({ title, price, originalPrice, discount, rating, reviewCount, 
                     )}
                 </div>
 
+                {/* Countdown Timer */}
+                {countdown && (
+                    <div className="mb-2">
+                        {countdown}
+                    </div>
+                )}
+
                 <button
                     className={`w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg font-medium text-xs transition-all duration-300 ${isHovered
-                            ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30'
-                            : 'bg-orange-50 text-orange-600 border border-orange-200'
+                        ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30'
+                        : 'bg-orange-50 text-orange-600 border border-orange-200'
                         }`}
                 >
                     <ShoppingCart size={14} />
@@ -103,5 +106,6 @@ const DealCard = ({ title, price, originalPrice, discount, rating, reviewCount, 
         </div>
     );
 };
+
 
 export default DealCard;

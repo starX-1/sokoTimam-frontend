@@ -1,76 +1,131 @@
 'use client'
 import { useEffect, useState } from 'react';
 import DealCard from './DealCard';
-import Products from '../api/products/api';
 import { useRouter } from 'next/navigation';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Clock } from 'lucide-react';
 import FlashSales from '../api/flashsale/api'
+import Products from '../api/products/api'
 
-// Countdown Timer Component
-const CountdownTimer = () => {
-    const [timeLeft, setTimeLeft] = useState({ hours: 1, minutes: 15, seconds: 13 });
+// Countdown Timer Component for individual products
+const CountdownTimer = ({ endTime }) => {
+    const [timeLeft, setTimeLeft] = useState({
+        days: 0,
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+        expired: false
+    });
 
     useEffect(() => {
-        const timer = setInterval(() => {
-            setTimeLeft(prev => {
-                let { days, hours, minutes, seconds } = prev;
+        const calculateTimeLeft = () => {
+            const difference = new Date(endTime).getTime() - new Date().getTime();
 
-                if (seconds > 0) {
-                    seconds--;
-                } else if (minutes > 0) {
-                    minutes--;
-                    seconds = 59;
-                } else if (hours > 0) {
-                    hours--;
-                    minutes = 59;
-                    seconds = 59;
-                }
+            if (difference > 0) {
+                setTimeLeft({
+                    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+                    minutes: Math.floor((difference / 1000 / 60) % 60),
+                    seconds: Math.floor((difference / 1000) % 60),
+                    expired: false
+                });
+            } else {
+                setTimeLeft({
+                    days: 0,
+                    hours: 0,
+                    minutes: 0,
+                    seconds: 0,
+                    expired: true
+                });
+            }
+        };
 
-                return { hours, minutes, seconds };
-            });
-        }, 1000);
+        calculateTimeLeft();
+        const timer = setInterval(calculateTimeLeft, 1000);
 
         return () => clearInterval(timer);
-    }, []);
+    }, [endTime]);
+
+    if (timeLeft.expired) {
+        return (
+            <div className="flex items-center gap-1 text-xs text-red-600 font-medium">
+                <Clock size={12} />
+                <span>Expired</span>
+            </div>
+        );
+    }
 
     return (
-        <div className="flex items-center gap-1 text-white text-sm sm:text-base font-medium">
-            <span>Time Left:</span>
-            <span className="bg-white/20 px-2 py-0.5 rounded">{String(timeLeft.hours).padStart(2, '0')}h</span>
-            <span>:</span>
-            <span className="bg-white/20 px-2 py-0.5 rounded">{String(timeLeft.minutes).padStart(2, '0')}m</span>
-            <span>:</span>
-            <span className="bg-white/20 px-2 py-0.5 rounded">{String(timeLeft.seconds).padStart(2, '0')}s</span>
+        <div className="flex items-center gap-1 text-xs font-medium text-orange-600">
+            <Clock size={12} />
+            <div className="flex gap-1">
+                {timeLeft.days > 0 && (
+                    <span className="bg-orange-100 px-1.5 py-0.5 rounded">
+                        {timeLeft.days}d
+                    </span>
+                )}
+                <span className="bg-orange-100 px-1.5 py-0.5 rounded">
+                    {String(timeLeft.hours).padStart(2, '0')}h
+                </span>
+                <span className="bg-orange-100 px-1.5 py-0.5 rounded">
+                    {String(timeLeft.minutes).padStart(2, '0')}m
+                </span>
+                <span className="bg-orange-100 px-1.5 py-0.5 rounded">
+                    {String(timeLeft.seconds).padStart(2, '0')}s
+                </span>
+            </div>
         </div>
     );
 };
 
 const DealsOfTheWeek = () => {
-    const [deals, setDeals] = useState([]);
+    const [flashSales, setFlashSales] = useState([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
-    const [flashsale, setFlashsale] = useState([]);
-
 
     useEffect(() => {
         const fetchFlashSales = async () => {
             try {
-                const response = await FlashSales.getFlashSales()
-            } catch (error) {
+                console.log('Fetching flash sales...');
+                const response = await FlashSales.getFlashSales();
+                console.log('Flash sales response:', response);
 
+                if (response && response.data && Array.isArray(response.data)) {
+                    // Fetch images for each product
+                    const flashSalesWithImages = await Promise.all(
+                        response.data.map(async (flashSale) => {
+                            try {
+                                const imageRes = await Products.getProductImagesById(flashSale.product.id);
+                                console.log('image', imageRes)
+                                const mainImage = imageRes && imageRes.images.length > 0 ? imageRes.images?.[0].imageUrl : null;
+                                return {
+                                    ...flashSale,
+                                    productImage: mainImage
+                                };
+                            } catch (error) {
+                                console.error(`Error fetching images for product ${flashSale.product.id}:`, error);
+                                return flashSale;
+                            }
+                        })
+                    );
+
+                    setFlashSales(flashSalesWithImages);
+                    console.log('Flash sales with images set:', flashSalesWithImages);
+                } else {
+                    console.warn('Unexpected response format:', response);
+                    setFlashSales([]);
+                }
+                setLoading(false);
+            } catch (error) {
+                console.error("Error fetching flash sales:", error);
+                setFlashSales([]);
+                setLoading(false);
             }
-        }
-        fetchFlashSales()
-    }, [])
+        };
+        fetchFlashSales();
+    }, []);
 
     const handleProductClick = (productId) => {
         router.push(`/Customer/product/${productId}`);
-    };
-
-    // Generate random discount between min and max percentage
-    const generateRandomDiscount = (min = 10, max = 70) => {
-        const discount = Math.floor(Math.random() * (max - min + 1)) + min;
-        return discount;
     };
 
     // Generate random rating between 3.5 and 5.0
@@ -83,48 +138,11 @@ const DealsOfTheWeek = () => {
         return Math.floor(Math.random() * (500 - 10 + 1)) + 10;
     };
 
-    // Generate random items left
-    const generateRandomItemsLeft = () => {
-        return Math.floor(Math.random() * (99 - 5 + 1)) + 5;
+    // Generate random items left based on stock limit
+    const generateRandomItemsLeft = (stockLimit) => {
+        const remaining = Math.floor(Math.random() * stockLimit) + 1;
+        return Math.min(remaining, stockLimit);
     };
-
-    useEffect(() => {
-        const fetchAllProducts = async () => {
-            try {
-                const response = await Products.getProducts();
-
-                // Get first 6 products for horizontal scroll
-                const firstProducts = response.products.slice(0, 6);
-                setDeals(firstProducts);
-                setLoading(false);
-            } catch (error) {
-                console.error("Error fetching products:", error);
-                setLoading(false);
-            }
-        };
-        fetchAllProducts();
-    }, []);
-
-    useEffect(() => {
-        // Only run this if deals have been fetched and don't already have images
-        if (deals.length === 0 || deals.some(p => p.images)) return;
-
-        const fetchProductImages = async () => {
-            const enrichedProducts = await Promise.all(
-                deals.map(async (product) => {
-                    const response = await Products.getProductWithImages(product.id);
-                    return {
-                        ...product,
-                        images: response.images,
-                    };
-                })
-            );
-            setDeals(enrichedProducts);
-        };
-
-        fetchProductImages();
-    }, [deals]);
-
 
     return (
         <section className="bg-white mt-1 rounded rounded-lg py-4 px-4 sm:px-6 lg:px-8 border-b-8 border-gray-100">
@@ -135,11 +153,9 @@ const DealsOfTheWeek = () => {
                         <div className="flex items-center gap-2">
                             <span className="text-xl">🔥</span>
                             <h2 className="text-lg sm:text-xl font-bold text-white">
-                                Deals of the Week
+                                Flash Sales
                             </h2>
                         </div>
-
-                        {/* <CountdownTimer /> */}
 
                         <button
                             onClick={() => router.push('/deals')}
@@ -154,20 +170,22 @@ const DealsOfTheWeek = () => {
                 {loading ? (
                     <div className="text-center py-12">
                         <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-orange-500 border-t-transparent"></div>
-                        <p className="text-gray-600 mt-3 text-sm">Loading deals...</p>
+                        <p className="text-gray-600 mt-3 text-sm">Loading flash sales...</p>
+                    </div>
+                ) : flashSales.length === 0 ? (
+                    <div className="text-center py-12">
+                        <p className="text-gray-600 text-sm">No active flash sales at the moment</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
                         <div className="flex gap-3 sm:gap-4 min-w-max">
-                            {deals.map((product) => {
-                                // Get the main image or fallback to first image
-                                const mainImage = product.images?.find(img => img.isMain)?.imageUrl
-                                    || product.images?.[0]?.imageUrl
-                                    || '';
+                            {flashSales.map((flashSale) => {
+                                const product = flashSale.product;
+                                const mainImage = flashSale.productImage || '';
 
                                 if (!mainImage) {
                                     return (
-                                        <div key={product.id} className="w-44 sm:w-48 flex-shrink-0 bg-white rounded-lg overflow-hidden animate-pulse border border-gray-200">
+                                        <div key={flashSale.id} className="w-44 sm:w-48 flex-shrink-0 bg-white rounded-lg overflow-hidden animate-pulse border border-gray-200">
                                             <div className="h-40 sm:h-44 bg-gray-200"></div>
                                             <div className="p-3 space-y-2">
                                                 <div className="h-3 bg-gray-200 rounded"></div>
@@ -178,31 +196,26 @@ const DealsOfTheWeek = () => {
                                     );
                                 }
 
-                                // Generate random discount and calculate prices
-                                const discountPercentage = generateRandomDiscount(10, 70);
-                                const currentPrice = parseFloat(product.price);
-                                const originalPrice = currentPrice / (1 - discountPercentage / 100);
-
-                                // Generate random rating and review count
                                 const rating = parseFloat(generateRandomRating());
                                 const reviewCount = generateRandomReviewCount();
-                                const itemsLeft = generateRandomItemsLeft();
+                                const itemsLeft = generateRandomItemsLeft(flashSale.stockLimit);
 
                                 return (
                                     <div
-                                        key={product.id}
+                                        key={flashSale.id}
                                         className="w-44 sm:w-48 flex-shrink-0"
                                     >
                                         <DealCard
                                             title={product.name}
-                                            price={`KSh ${currentPrice.toLocaleString()}`}
-                                            originalPrice={`KSh ${Math.round(originalPrice).toLocaleString()}`}
-                                            discount={`-${discountPercentage}%`}
+                                            price={`KSh ${parseFloat(flashSale.discountPrice).toLocaleString()}`}
+                                            originalPrice={`KSh ${parseFloat(product.price).toLocaleString()}`}
+                                            discount={`-${flashSale.discountPercent}%`}
                                             rating={rating}
                                             reviewCount={reviewCount}
                                             itemsLeft={itemsLeft}
                                             imageUrl={mainImage}
                                             onClick={() => handleProductClick(product.id)}
+                                            countdown={<CountdownTimer endTime={flashSale.endTime} />}
                                         />
                                     </div>
                                 );
