@@ -489,7 +489,7 @@ const FlashSalesPage = () => {
                       Edit
                     </button>
                     <button
-                      onClick={handleDeleteClick(sale.id)}
+                      onClick={()=>handleDeleteClick(sale.id)}
                       className="text-red-600 hover:text-red-900 transition inline-flex items-center gap-1">
                       <Trash2 className="w-4 h-4" />
                       Delete
@@ -839,7 +839,7 @@ const FlashSalesPage = () => {
             <p className="mb-6 text-orange-600">Are you sure you want to delete this flash sale?</p>
             <div className="flex justify-end gap-4">
               <button className="px-2 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400" onClick={() => setShowDeleteModal(false)}>Cancel</button>
-              <button className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700" onClick={handleDelete(deleteSaleId)}>Delete</button>
+              <button className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700" onClick={() => handleDelete(deleteSaleId)}>Delete</button>
             </div>
           </div>
         </div>
