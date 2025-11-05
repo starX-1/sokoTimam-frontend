@@ -158,7 +158,7 @@ const DealsOfTheWeek = () => {
                         </div>
 
                         <button
-                            onClick={() => router.push('/deals')}
+                            onClick={() => router.push('/flashsales')}
                             className="flex items-center gap-1 text-white hover:underline text-sm font-medium"
                         >
                             See All

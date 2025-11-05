@@ -53,7 +53,6 @@ const FlashSalesPage = () => {
       try {
         setIsLoading(true);
         const res = await FlashSales.getSellerFlashSales(shops[0].sellerId, user.accessToken)
-console.log(res)
         if (res?.data && Array.isArray(res.data)) {
           // Transform API data to match table structure
           const transformedSales = res.data.map(sale => ({
@@ -103,12 +102,6 @@ console.log(res)
     // const now = new Date();
     const diff = new Date(endTime).getTime() - new Date().getTime();
 
-
-    // console.log('end', end)
-    // console.log('now', now)
-
-    console.log('diff', diff)
-
     if (diff <= 0) return 'Ended';
 
     const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -120,6 +113,8 @@ console.log(res)
     }
     return `${hours}h ${minutes}m`;
   };
+
+  console.log('sales', sales)
 
   const filteredSales = sales.filter((sale) => {
     const matchesStatus = filterStatus === 'all' || sale.status === filterStatus;
@@ -134,10 +129,10 @@ console.log(res)
       errors.productId = 'Product is required';
     }
 
-    const discountPercent = Number(formData.discountPercent);
-    if (!Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100) {
-      errors.discountPercent = 'Discount must be between 0 and 100';
-    }
+    // const discountPercent = Number(formData.discountPercent);
+    // if (!Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100) {
+    //   errors.discountPercent = 'Discount must be between 0 and 100';
+    // }
 
     const discountPrice = Number(formData.discountPrice);
     if (!Number.isFinite(discountPrice) || discountPrice < 0) {
@@ -297,27 +292,31 @@ console.log(res)
       toast.success('Flash Sale deleted successfully');
       // Refresh the flash sales list
       const refreshRes = await FlashSales.getSellerFlashSales(shops[0].sellerId, user.accessToken)
-      if (refreshRes?.data) {
-        const transformedSales = refreshRes.data.map(sale => ({
-          id: sale.id,
-          name: sale.product?.name || `Flash Sale #${sale.id}`,
-          discountPercent: sale.discountPercent,
-          productCount: 1,
-          startTime: sale.startTime,
-          endTime: sale.endTime,
-          status: sale.status,
-          revenue: sale.soldCount ? (sale.discountPrice * sale.soldCount).toLocaleString() : '0',
-          participants: sale.soldCount || 0,
-          stockLimit: sale.stockLimit,
-          discountPrice: sale.discountPrice,
-          soldCount: sale.soldCount,
-          product: sale.product,
-          productId: sale.product?.id
-        }));
-        setSales(transformedSales);
-      }
+      // if (refreshRes?.data) {
+      const transformedSales = refreshRes.data.map(sale => ({
+        id: sale.id,
+        name: sale.product?.name || `Flash Sale #${sale.id}`,
+        discountPercent: sale.discountPercent,
+        productCount: 1,
+        startTime: sale.startTime,
+        endTime: sale.endTime,
+        status: sale.status,
+        revenue: sale.soldCount ? (sale.discountPrice * sale.soldCount).toLocaleString() : '0',
+        participants: sale.soldCount || 0,
+        stockLimit: sale.stockLimit,
+        discountPrice: sale.discountPrice,
+        soldCount: sale.soldCount,
+        product: sale.product,
+        productId: sale.product?.id
+      }));
+      setSales(transformedSales);
+      // }
     } catch (error) {
       toast.error('Failed to delete flash sale');
+    }
+    finally {
+      setShowDeleteModal(false);
+
     }
   }
   const closeModal = () => {
@@ -496,7 +495,7 @@ console.log(res)
                       Edit
                     </button>
                     <button
-                      onClick={()=>handleDeleteClick(sale.id)}
+                      onClick={() => handleDeleteClick(sale.id)}
                       className="text-red-600 hover:text-red-900 transition inline-flex items-center gap-1">
                       <Trash2 className="w-4 h-4" />
                       Delete
@@ -555,8 +554,8 @@ console.log(res)
               </div>
 
               {/* Discount Percent and Price */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 gap-4">
+                {/* <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Discount Percent (%) *
                   </label>
@@ -571,7 +570,7 @@ console.log(res)
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 text-gray-700 focus:border-transparent outline-none transition ${formErrors.discountPercent ? 'border-red-500' : 'border-gray-300'}`}
                   />
                   {formErrors.discountPercent && <p className="text-red-500 text-xs mt-1">{formErrors.discountPercent}</p>}
-                </div>
+                </div> */}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
