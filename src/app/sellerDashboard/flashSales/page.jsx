@@ -97,10 +97,16 @@ const FlashSalesPage = () => {
     }
   };
 
+  
   const getTimeRemaining = (endTime) => {
-    // const end = new Date(endTime);
-    // const now = new Date();
-    const diff = new Date(endTime).getTime() - new Date().getTime();
+    const endDate = new Date(endTime);
+    const now = new Date();
+
+    // EAT is UTC+3, so add 3 hours to current UTC time
+    const eatOffset = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
+    const currentTimeInEAT = now.getTime() + eatOffset;
+
+    const diff = endDate.getTime() - currentTimeInEAT;
 
     if (diff <= 0) return 'Ended';
 
@@ -113,7 +119,6 @@ const FlashSalesPage = () => {
     }
     return `${hours}h ${minutes}m`;
   };
-
   console.log('sales', sales)
 
   const filteredSales = sales.filter((sale) => {

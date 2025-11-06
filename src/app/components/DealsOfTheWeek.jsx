@@ -6,7 +6,7 @@ import { ChevronRight, Clock } from 'lucide-react';
 import FlashSales from '../api/flashsale/api'
 import Products from '../api/products/api'
 
-// Countdown Timer Component for individual products
+// Countdown Timer Component for individual products with EAT timezone support
 const CountdownTimer = ({ endTime }) => {
     const [timeLeft, setTimeLeft] = useState({
         days: 0,
@@ -18,7 +18,14 @@ const CountdownTimer = ({ endTime }) => {
 
     useEffect(() => {
         const calculateTimeLeft = () => {
-            const difference = new Date(endTime).getTime() - new Date().getTime();
+            const endDate = new Date(endTime);
+            const now = new Date();
+
+            // EAT is UTC+3, so add 3 hours to current UTC time
+            const eatOffset = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
+            const currentTimeInEAT = now.getTime() + eatOffset;
+
+            const difference = endDate.getTime() - currentTimeInEAT;
 
             if (difference > 0) {
                 setTimeLeft({
