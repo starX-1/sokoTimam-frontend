@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastContainer } from "react-toastify";
 import { CartProvider } from '../app/Hooks/CartContext'
+import { FlashSaleCartProvider } from '../app/Hooks/FlashSaleCartContext'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +32,9 @@ export default function RootLayout({
       >
         <ToastContainer position="top-right" autoClose={5000} hideProgressBar />
         <CartProvider>
-          {children}
+          <FlashSaleCartProvider>
+            {children}
+          </FlashSaleCartProvider>
         </CartProvider>
       </body>
     </html>

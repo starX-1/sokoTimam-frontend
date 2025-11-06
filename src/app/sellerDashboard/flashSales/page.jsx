@@ -97,14 +97,12 @@ const FlashSalesPage = () => {
     }
   };
 
-  
+
   const getTimeRemaining = (endTime) => {
     const endDate = new Date(endTime);
     const now = new Date();
 
-    // EAT is UTC+3, so add 3 hours to current UTC time
-    const eatOffset = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
-    const currentTimeInEAT = now.getTime() + eatOffset;
+    const currentTimeInEAT = now.getTime();
 
     const diff = endDate.getTime() - currentTimeInEAT;
 
@@ -203,6 +201,9 @@ const FlashSalesPage = () => {
     e.preventDefault();
     if (validateForm()) {
       try {
+        // convert the endtime and starttime toIsoString
+        formData.startTime = new Date(formData.startTime).toISOString();
+        formData.endTime = new Date(formData.endTime).toISOString();
         const res = await FlashSales.createFlashSale(formData, user.accessToken)
         toast.success('Flash Sale created successfully');
         closeModal();
@@ -256,6 +257,9 @@ const FlashSalesPage = () => {
           ...formData,
           id: editingSaleId
         };
+        // convert the endtime and starttime toIsoString
+        updateData.startTime = new Date(updateData.startTime).toISOString();
+        updateData.endTime = new Date(updateData.endTime).toISOString();
         const res = await FlashSales.updateFlashSale(updateData, user.accessToken)
         toast.success('Flash Sale updated successfully');
         closeUpdateModal();

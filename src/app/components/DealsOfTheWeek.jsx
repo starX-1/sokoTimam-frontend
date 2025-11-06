@@ -21,9 +21,7 @@ const CountdownTimer = ({ endTime }) => {
             const endDate = new Date(endTime);
             const now = new Date();
 
-            // EAT is UTC+3, so add 3 hours to current UTC time
-            const eatOffset = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
-            const currentTimeInEAT = now.getTime() + eatOffset;
+            const currentTimeInEAT = now.getTime()
 
             const difference = endDate.getTime() - currentTimeInEAT;
 

@@ -4,11 +4,11 @@ import { useParams, useRouter } from 'next/navigation';
 import Products from '../../../api/products/api';
 import Header from '../../../components/header'
 import Footer from '../../../components/Footer'
-// import Cart from '../../../../app/api/cart/api'
-import { ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Star, Minus, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Star, Minus, Plus, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import { getSession } from 'next-auth/react';
 import { toast } from 'react-toastify';
 import { useCart } from '../../../Hooks/CartContext';
+import { useFlashSaleCart } from '../../../Hooks/FlashSaleCartContext';
 
 const ProductDetailPage = () => {
     const params = useParams();
@@ -22,13 +22,30 @@ const ProductDetailPage = () => {
     const router = useRouter();
     const [user, setUser] = useState(null);
     const [adding, setAdding] = useState(false);
+    const [flashSale, setFlashSale] = useState(null);
+    const [cartType, setCartType] = useState('normal'); // 'normal' or 'flashsale'
     const { addItemToCart } = useCart();
+    const { addFlashSaleItem } = useFlashSaleCart();
 
     useEffect(() => {
         const fetchProduct = async () => {
             try {
                 const response = await Products.getProductWithImages(productId);
                 setProduct(response);
+                
+                // Check if this product has an active flash sale
+                if (response.flashSale) {
+                    const now = new Date();
+                    const eatOffset = 3 * 60 * 60 * 1000;
+                    const currentTimeInEAT = now.getTime() + eatOffset;
+                    const endTime = new Date(response.flashSale.endTime).getTime();
+                    
+                    if (currentTimeInEAT < endTime) {
+                        setFlashSale(response.flashSale);
+                        setCartType('flashsale');
+                    }
+                }
+                
                 setLoading(false);
             } catch (error) {
                 console.error("Error fetching product:", error);
@@ -40,7 +57,7 @@ const ProductDetailPage = () => {
             fetchProduct();
         }
     }, [productId]);
-    // useefetct to fetch user from session
+
     useEffect(() => {
         const fetchUser = async () => {
             try {
@@ -55,7 +72,11 @@ const ProductDetailPage = () => {
     }, []);
 
     const handleQuantityChange = (action) => {
-        if (action === 'increase' && quantity < product.stock) {
+        const maxStock = cartType === 'flashsale' 
+            ? flashSale.stockLimit - flashSale.soldCount 
+            : product.stock;
+
+        if (action === 'increase' && quantity < maxStock) {
             setQuantity(quantity + 1);
         } else if (action === 'decrease' && quantity > 1) {
             setQuantity(quantity - 1);
@@ -83,6 +104,38 @@ const ProductDetailPage = () => {
         router.push("/login");
     }
 
+    const handleAddToCart = async () => {
+        if (!user) {
+            setLoginMOdalOpen(true);
+            return;
+        }
+
+        try {
+            setAdding(true);
+            
+            if (cartType === 'flashsale' && flashSale) {
+                // Add to flash sale cart
+                const success = addFlashSaleItem({
+                    ...flashSale,
+                    product: product
+                }, quantity);
+                
+                if (success) {
+                    setQuantity(1);
+                }
+            } else {
+                // Add to normal cart
+                await addItemToCart({ productId: product.id, quantity: quantity || 1 });
+                setQuantity(1);
+            }
+        } catch (err) {
+            console.error("add to cart error", err);
+            toast.error("Error adding to cart.");
+        } finally {
+            setAdding(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -103,6 +156,7 @@ const ProductDetailPage = () => {
             </div>
         );
     }
+
     const loginModal = () => {
         return (
             <div>
@@ -120,38 +174,19 @@ const ProductDetailPage = () => {
         )
     }
 
-    const handleAddToCart = async () => {
-
-        if (!user) {
-            setLoginMOdalOpen(true);
-            return;
-        }
-
-        try {
-            setAdding(true);
-            // call the provider helper which already handles API + refresh
-            await addItemToCart({ productId: product.id, quantity: quantity || 1 });
-
-            // addItemToCart already shows success toast — but we can show one here too if you prefer:
-            // toast.success("Added to cart");
-        } catch (err) {
-            console.error("add to cart error", err);
-            toast.error("Error adding to cart.");
-        } finally {
-            setAdding(false);
-        }
-    };
-
     const mainImage = product.images?.[selectedImage]?.imageUrl || 'https://placehold.co/800x800/f0f0f0/333333?text=No+Image';
     const formattedPrice = parseFloat(product.price).toLocaleString();
+    const maxStock = cartType === 'flashsale' 
+        ? flashSale.stockLimit - flashSale.soldCount 
+        : product.stock;
+    const isOutOfStock = maxStock <= 0;
 
     return (
         <div className="min-h-screen bg-gray-50">
             <Header />
 
-            {
-                loginModalOpen && loginModal()
-            }
+            {loginModalOpen && loginModal()}
+            
             <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
                 {/* Breadcrumb */}
                 <nav className="mb-6 text-sm text-gray-600">
@@ -165,25 +200,13 @@ const ProductDetailPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 bg-white rounded-2xl shadow-lg p-6 lg:p-8">
                     {/* Left Column - Images */}
                     <div className="space-y-4">
-                        {/* Main Image Display */}
-                        {/* The container block that wraps the main image */}
-                        <div
-                            className="relative aspect-square bg-gray-100 rounded-2xl overflow-hidden group max-w-xl mx-auto lg:max-w-none lg:mx-0 flex items-center justify-center"
-                        >
+                        <div className="relative aspect-square bg-gray-100 rounded-2xl overflow-hidden group max-w-xl mx-auto lg:max-w-none lg:mx-0 flex items-center justify-center">
                             <img
                                 src={mainImage}
                                 alt={product.name}
-
-                                /* * This ensures the image element is free to size itself based on 
-                                 * object-contain, and the parent flex container centers it. 
-                                 * We do NOT want w-full h-full here, as that would force the image 
-                                 * element to fill the entire space, potentially hiding the object-contain effect.
-                                */
                                 className="object-contain"
                             />
 
-                            {/* All other elements remain unchanged, but are positioned absolutely over the center. */}
-                            {/* Image Navigation Arrows */}
                             {product.images?.length > 1 && (
                                 <>
                                     <button
@@ -201,7 +224,6 @@ const ProductDetailPage = () => {
                                 </>
                             )}
 
-                            {/* Favorite & Share Buttons (Reduced size) */}
                             <div className="absolute top-3 right-3 flex gap-1.5">
                                 <button
                                     onClick={() => setIsFavorite(!isFavorite)}
@@ -214,19 +236,30 @@ const ProductDetailPage = () => {
                                 </button>
                             </div>
 
-                            {/* Stock Badge (Reduced size) */}
-                            {product.stock > 0 ? (
-                                <div className="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                    In Stock
+                            {/* Flash Sale Badge */}
+                            {flashSale && (
+                                <div className="absolute top-3 left-3 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                                    <Zap className="w-3 h-3" />
+                                    Flash Sale
                                 </div>
-                            ) : (
-                                <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                    Out of Stock
-                                </div>
+                            )}
+
+                            {/* Stock Badge */}
+                            {!flashSale && (
+                                <>
+                                    {product.stock > 0 ? (
+                                        <div className="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                            In Stock
+                                        </div>
+                                    ) : (
+                                        <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                            Out of Stock
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
 
-                        {/* Thumbnail Gallery */}
                         {product.images?.length > 1 && (
                             <div className="grid grid-cols-4 gap-3">
                                 {product.images.map((image, index) => (
@@ -256,7 +289,6 @@ const ProductDetailPage = () => {
                                 {product.name}
                             </h1>
 
-                            {/* Rating */}
                             <div className="flex items-center gap-2 mb-4">
                                 <div className="flex">
                                     {[...Array(5)].map((_, i) => (
@@ -266,20 +298,43 @@ const ProductDetailPage = () => {
                                 <span className="text-gray-600 text-sm">(4.8 - 124 reviews)</span>
                             </div>
 
-                            {/* Price */}
-                            <div className="flex items-baseline gap-3 mb-4">
-                                <span className="text-4xl font-bold text-orange-600">
-                                    KSh {formattedPrice}
-                                </span>
-                                <span className="text-xl text-gray-400 line-through">
-                                    KSh {Math.round(parseFloat(product.price) * 1.25).toLocaleString()}
-                                </span>
-                                <span className="bg-red-100 text-red-600 text-sm font-semibold px-2 py-1 rounded">
-                                    20% OFF
-                                </span>
-                            </div>
+                            {/* Price Section */}
+                            {flashSale ? (
+                                <div className="flex items-baseline gap-3 mb-4">
+                                    <span className="text-4xl font-bold text-orange-600">
+                                        KSh {parseFloat(flashSale.discountPrice).toLocaleString()}
+                                    </span>
+                                    <span className="text-xl text-gray-400 line-through">
+                                        KSh {formattedPrice}
+                                    </span>
+                                    <span className="bg-red-100 text-red-600 text-sm font-semibold px-2 py-1 rounded flex items-center gap-1">
+                                        <Zap className="w-3 h-3" />
+                                        {flashSale.discountPercent}% OFF
+                                    </span>
+                                </div>
+                            ) : (
+                                <div className="flex items-baseline gap-3 mb-4">
+                                    <span className="text-4xl font-bold text-orange-600">
+                                        KSh {formattedPrice}
+                                    </span>
+                                    <span className="text-xl text-gray-400 line-through">
+                                        KSh {Math.round(parseFloat(product.price) * 1.25).toLocaleString()}
+                                    </span>
+                                    <span className="bg-red-100 text-red-600 text-sm font-semibold px-2 py-1 rounded">
+                                        20% OFF
+                                    </span>
+                                </div>
+                            )}
 
-                            {/* Description */}
+                            {/* Flash Sale Time Warning */}
+                            {flashSale && (
+                                <div className="bg-orange-50 border-l-4 border-orange-500 p-3 mb-4 rounded">
+                                    <p className="text-sm text-orange-900 font-medium">
+                                        ⏰ Flash Sale Active - Limited time offer!
+                                    </p>
+                                </div>
+                            )}
+
                             {product.description && (
                                 <p className="text-gray-700 leading-relaxed mb-6">
                                     {product.description}
@@ -305,48 +360,54 @@ const ProductDetailPage = () => {
                                     <button
                                         onClick={() => handleQuantityChange('increase')}
                                         className="p-3 hover:bg-gray-100 transition"
-                                        disabled={quantity >= product.stock}
+                                        disabled={quantity >= maxStock}
                                     >
                                         <Plus className="w-4 h-4 text-gray-700" />
                                     </button>
                                 </div>
                                 <span className="text-sm text-gray-600">
-                                    {product.stock} items available
+                                    {maxStock} items available
                                 </span>
                             </div>
+
+                            {/* Flash Sale Stock Warning */}
+                            {flashSale && maxStock < 5 && maxStock > 0 && (
+                                <p className="text-xs text-red-600 font-medium">
+                                    ⚠️ Only {maxStock} units left at this price!
+                                </p>
+                            )}
                         </div>
 
                         {/* Action Buttons */}
                         <div className="flex flex-col gap-2 md:flex-row md:gap-4">
-                            {
-                                adding ? (
-                                    <button
-                                        disabled
-                                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded font-medium text-xs transition shadow-md bg-gray-300 text-gray-500 cursor-not-allowed"
-                                    >
-                                        <svg className="animate-spin w-4 h-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                                        </svg>
-                                        Adding...
-                                    </button>
-                                ) : (
-                                    <button
-                                        disabled={product.stock === 0}
-                                        onClick={handleAddToCart}
-                                        // Added 'md:flex-1' to let the button expand fully in a row on medium screens
-                                        className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded font-medium text-xs transition shadow-md md:flex-1 ${product.stock > 0
-                                            ? 'bg-orange-600 text-white hover:bg-orange-700'
-                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                            }`}
-                                    >
-                                        <ShoppingCart className="w-3 h-3" />
-                                        {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
-                                    </button>
-                                )
-                            }
+                            {adding ? (
+                                <button
+                                    disabled
+                                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded font-medium text-xs transition shadow-md bg-gray-300 text-gray-500 cursor-not-allowed"
+                                >
+                                    <svg className="animate-spin w-4 h-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                    </svg>
+                                    Adding...
+                                </button>
+                            ) : (
+                                <button
+                                    disabled={isOutOfStock}
+                                    onClick={handleAddToCart}
+                                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded font-medium text-xs transition shadow-md md:flex-1 ${
+                                        isOutOfStock
+                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                            : flashSale
+                                            ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white hover:from-orange-700 hover:to-red-700'
+                                            : 'bg-orange-600 text-white hover:bg-orange-700'
+                                    }`}
+                                >
+                                    <ShoppingCart className="w-3 h-3" />
+                                    {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                                </button>
+                            )}
                             <button
-                                // Added 'flex-1' for full width when stacked, and 'md:flex-initial' to shrink it back when in a row
                                 className="flex-1 px-2 py-1 border-2 border-orange-600 text-orange-600 rounded font-medium text-xs hover:bg-orange-50 transition md:flex-initial"
                             >
                                 💖 Add to Wishlist
