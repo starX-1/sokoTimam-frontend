@@ -49,6 +49,22 @@ class Users {
             return null
         }
     }
+    async forgetPassword(email) {
+        try {
+            const response = await instance.post('/user/forgot-password', { email })
+            return response.data
+        } catch (error) {
+            return null
+        }
+    }
+    async resetPassword(token, password) {
+        try {
+            const response = await instance.post('/user/reset-password', { token, password })
+            return response.data
+        } catch (error) {
+            return null
+        }
+    }
 }
 
 export default new Users();
