@@ -23,6 +23,8 @@ const ProfilePage = () => {
     }, []);
 
 
+    console.log(user);
+
     const { orders, loadingOrders, ordersError } = useUserOrders(user);
 
 

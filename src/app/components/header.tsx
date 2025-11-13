@@ -15,6 +15,8 @@ interface User {
     phone: string,
     role: string,
     sub: number
+    name: string,
+    // image: string
 }
 const Header = () => {
     const router = useRouter();
@@ -187,7 +189,7 @@ const Header = () => {
                         </button>
                         {logedInUser && (
                             <button className="text-gray-700 border border-gray-300 px-2 md:px-3 py-1.5 rounded-full hover:bg-gray-50 transition duration-150 shadow-sm font-semibold">
-                                Ship To {logedInUser?.firstname}
+                                Ship To {logedInUser?.name}
                             </button>
                         )}
                     </div>

@@ -23,7 +23,17 @@ const authOptions = {
                         password: credentials.password,
                     });
                     const { token, user } = data;
-                    if (token && user) return { ...user, accessToken: token };
+                    
+                    if (token && user) {
+                        return {
+                            id: user.id,
+                            email: user.email,
+                            name: user.name || `${user.firstname || ''} ${user.lastname || ''}`.trim(),
+                            role: user.role,
+                            accessToken: token,
+                            ...user,
+                        };
+                    }
                     return null;
                 } catch (err) {
                     console.error("Credentials login error:", err.response?.data || err.message);
@@ -45,22 +55,28 @@ const authOptions = {
         async signIn({ user, account, profile }) {
             if (account?.provider === "google") {
                 try {
-                    const randomPassword = Math.random().toString(36).slice(-12);
                     const payload = {
                         email: profile.email,
-                        // name: profile.name,
-                        // split profile.name into firstname and lastname
                         firstname: profile.name.split(" ")[0],
-                        lastname: profile.name.split(" ")[1],
+                        lastname: profile.name.split(" ")[1] || "",
                         googleId: profile.sub,
                         isGoogleUser: true,
-                        // password: randomPassword,
                     };
                     console.log("Google signup payload:", payload);
+                    
                     const res = await api.post("/user", payload);
                     const { token: backendToken, user: backendUser } = res.data;
+                    
+                    console.log("Google user created/retrieved:", backendUser);
+                    
+                    // Set all required user properties including role
                     user.accessToken = backendToken;
                     user.id = backendUser.id;
+                    user.email = backendUser.email;
+                    user.name = backendUser.name || `${backendUser.firstname || ''} ${backendUser.lastname || ''}`.trim();
+                    user.role = backendUser.role; // ✅ Important: get role from backend
+                    user.googleId = backendUser.googleId;
+                    
                     return true;
                 } catch (err) {
                     console.error("Google signin error details:", {
@@ -70,7 +86,19 @@ const authOptions = {
                     });
                     const status = err.response?.status;
                     if (status === 409) {
-                        return `${process.env.NEXTAUTH_URL}/login?error=EMAIL_EXISTS`;
+                        // User already exists - try to get their full data
+                        try {
+                            const existingUserRes = await api.get(`/user/email/${profile.email}`);
+                            const existingUser = existingUserRes.data;
+                            user.id = existingUser.id;
+                            user.email = existingUser.email;
+                            user.role = existingUser.role; // Get existing user's role
+                            user.name = existingUser.name || `${existingUser.firstname || ''} ${existingUser.lastname || ''}`.trim();
+                            return true;
+                        } catch (getErr) {
+                            console.error("Error fetching existing user:", getErr);
+                            return `${process.env.NEXTAUTH_URL}/login?error=EMAIL_EXISTS`;
+                        }
                     }
                     return `${process.env.NEXTAUTH_URL}/login?error=GOOGLE_SIGNIN_FAILED`;
                 }
@@ -79,20 +107,32 @@ const authOptions = {
         },
 
         async jwt({ token, user, account }) {
+            // When user first logs in
             if (user) {
                 token.user = {
-                    id: user.id ?? user.sub ?? user.id,
-                    name: user.name,
+                    id: user.id,
                     email: user.email,
+                    name: user.name,
+                    role: user.role, // ✅ Store role in token
                 };
-                token.accessToken = user.accessToken ?? token.accessToken;
+                token.accessToken = user.accessToken;
             }
-            if (account?.access_token) token.providerAccessToken = account.access_token;
+            
+            if (account?.access_token) {
+                token.providerAccessToken = account.access_token;
+            }
+            
             return token;
         },
 
         async session({ session, token }) {
-            session.user = token.user ?? session.user;
+            // Copy user data from JWT token to session
+            if (token?.user) {
+                session.user = {
+                    ...session.user,
+                    ...token.user,
+                };
+            }
             session.accessToken = token.accessToken;
             session.providerAccessToken = token.providerAccessToken;
             return session;
