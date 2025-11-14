@@ -1,6 +1,9 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Lock, Eye, EyeOff, CheckCircle, ArrowLeft } from 'lucide-react';
+import Users from '../api/user/api'
+import { toast } from 'react-toastify';
+import { useRouter } from 'next/navigation';
 
 // --- Decorative Pattern Divider ---
 const PatternDivider = () => (
@@ -81,6 +84,16 @@ const ResetPassword = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [token, setToken] = useState('');
+    const router = useRouter()
+
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        if (token) {
+            setToken(token);
+        }
+    }, []);
 
     const validatePassword = () => {
         const errors = [];
@@ -107,25 +120,35 @@ const ResetPassword = () => {
     const handleSubmit = async () => {
         const errors = validatePassword();
         if (errors.length > 0) {
-            alert(errors.join('\n'));
+            toast.error(errors.join('\n'));
             return;
         }
 
         setLoading(true);
         try {
             // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            setSuccess(true);
-            setLoading(false);
+            const response = await Users.resetPassword(token, password);
+            if (response.message !== "Token and new password are required") {
+                toast.success('Password reset successfully!');
+                setSuccess(true);
+                setLoading(false);
+                setTimeout(() => {
+                    handleBackToLogin();
+                }, 3000);
+            } else {
+                toast.error("Something went wrong. Please try again.");
+                setLoading(false);
+            }
         } catch (error) {
-            alert('Something went wrong. Please try again.');
+            toast.error('Something went wrong. Please try again.');
             setLoading(false);
         }
     };
 
     const handleBackToLogin = () => {
         // Navigate to login - you can use router.push('/login') in actual implementation
-        alert('Redirecting to login...');
+        router.push('/login');
+
     };
 
     return (
