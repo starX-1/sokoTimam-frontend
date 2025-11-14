@@ -57,9 +57,9 @@ class Users {
             return null
         }
     }
-    async resetPassword(token, password) {
+    async resetPassword(data) {
         try {
-            const response = await instance.post('/user/reset-password', { token, password })
+            const response = await instance.post('/user/reset-password', data)
             return response.data
         } catch (error) {
             return null

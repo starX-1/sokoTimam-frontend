@@ -127,7 +127,11 @@ const ResetPassword = () => {
         setLoading(true);
         try {
             // Simulate API call
-            const response = await Users.resetPassword(token, password);
+            const data ={
+                token:token,
+                newPassword:password
+            }
+            const response = await Users.resetPassword(data);
             if (response.message !== "Token and new password are required") {
                 toast.success('Password reset successfully!');
                 setSuccess(true);
