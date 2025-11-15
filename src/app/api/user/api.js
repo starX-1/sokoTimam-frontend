@@ -2,10 +2,12 @@ import instance from "../../Hooks/axios";
 
 class Users {
     async getAll(user) {
+
+        console.log(user)
         try {
             const response = await instance.get('/user', {
                 headers: {
-                    Authorization: `Bearer ${user.user.accessToken}`
+                    Authorization: `Bearer ${user.accessToken}`
                 }
             })
             return response.data
