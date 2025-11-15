@@ -19,7 +19,7 @@ import { useParams, useRouter } from "next/navigation";
 import { getSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 // Assuming the Shops API is available and works as intended
-import Shops from '../../../../api/shop/api' 
+import Shops from '../../../../api/shop/api'
 
 // --- Dummy Shop Data for Single View Demonstration ---
 // Using the data from your prompt's Array[0]
@@ -77,7 +77,7 @@ const SingleShopView = () => {
             // /*
             try {
                 const session = await getSession();
-                const shopData = await Shops.getShopById(shopId, session.user.accessToken);
+                const shopData = await Shops.getShopById(shopId, session.accessToken);
                 setShop(shopData.shop);
             } catch (error) {
                 console.error('Failed to fetch shop:', error);

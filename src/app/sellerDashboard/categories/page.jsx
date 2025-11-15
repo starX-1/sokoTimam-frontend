@@ -47,11 +47,12 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
 
     // useefect to fetch seller shop using the session storage 
     useEffect(() => {
+
         const fetchSellerShop = async () => {
             if (sellerSession) {
                 try {
                     const sellerData = JSON.parse(sessionStorage.getItem('sellerData'));
-                    const response = await sellers.getAllMyShops(sellerData.id, sellerSession.user.accessToken);
+                    const response = await sellers.getAllMyShops(sellerData.id, sellerSession.accessToken);
                     setSellerShop(response.shops);
                 } catch (error) {
                     console.error("Failed to fetch seller shop:", error);
@@ -73,7 +74,7 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
         try {
             const newCategory = { name, parentId: parentIdValue };
             const shopId = sellerShop && sellerShop.length > 0 ? sellerShop[0].id : null;
-            await Categories.createCategory({...newCategory, shopId}, sellerSession.user.accessToken);
+            await Categories.createCategory({ ...newCategory, shopId }, sellerSession.accessToken);
             // You would then trigger a re-fetch of the category list in CategoriesView
             onClose(true); // Close and signify a successful action
         } catch (error) {

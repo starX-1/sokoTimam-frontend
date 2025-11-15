@@ -23,7 +23,7 @@ export const ShopProvider = ({ children }) => {
                 const session = await getSession();
                 const res = await sellers.getAllMyShops(
                     sellerData.id,
-                    session.user.accessToken
+                    session.accessToken
                 );
 
                 setShops(res.shops || []);

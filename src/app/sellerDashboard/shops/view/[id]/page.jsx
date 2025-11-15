@@ -316,7 +316,7 @@ const SingleShopView = () => {
         const fetchShop = async () => {
             try {
                 const session = await getSession();
-                const shopData = await Shops.getShopById(shopId, session.user.accessToken);
+                const shopData = await Shops.getShopById(shopId, session.accessToken);
                 const bankData = await Accounts.getBySHopId(shopId);
                 setSellerBankAccount(bankData.data);
                 setShop(shopData.shop);
@@ -412,7 +412,7 @@ const SingleShopView = () => {
             toast.success('Bank details updated successfully!');
             const bankData = await Accounts.getBySHopId(shopId);
             setSellerBankAccount(bankData.data);
-            
+
             // setSellerBankAccount([response.data]);
         }
     }

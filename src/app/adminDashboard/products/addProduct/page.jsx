@@ -67,7 +67,7 @@ const AddProductView = ({ onViewChange }) => {
                 const session = await getSession();
                 setAdminSession(session);
                 // Fetch shops
-                const shopsResponse = await Shops.getAllShops(session.user.accessToken);
+                const shopsResponse = await Shops.getAllShops(session.accessToken);
                 // const shopsData = await shopsResponse.json();
                 setShops(shopsResponse.shops);
 
@@ -146,7 +146,7 @@ const AddProductView = ({ onViewChange }) => {
                 }
             });
 
-            const response = await Products.createProduct(adminSession.user.accessToken, formData);
+            const response = await Products.createProduct(adminSession.accessToken, formData);
 
             if (response.message === "Product created successfully") {
                 toast.success("Product created successfully");

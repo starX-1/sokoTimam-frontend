@@ -35,7 +35,9 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
         const fetchParentCategories = async () => {
             try {
                 const session = await getSession();
-                setAdminSession(session); const response = await Categories.getCategories();
+                console.log(session)
+                setAdminSession(session);
+                const response = await Categories.getCategories();
                 setParentCategories(response.categories);
             } catch (error) {
                 console.error("Failed to fetch parent categories:", error);
@@ -50,7 +52,7 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
         const fetchShops = async () => {
             try {
                 const session = await getSession();
-                const response = await Shops.getAllShops(session.user.accessToken);
+                const response = await Shops.getAllShops(session.accessToken);
                 setShops(response.shops);
             } catch (error) {
                 console.error("Failed to fetch admin session:", error);
@@ -71,7 +73,7 @@ const CreateCategoryModal = ({ isOpen, onClose, categories }) => {
         // In a real application, you'd call an API here, like:
         try {
             const newCategory = { name, parentId: parentIdValue };
-            await Categories.createCategory({ ...newCategory, shopId: shopId }, adminSession.user.accessToken);
+            await Categories.createCategory({ ...newCategory, shopId: shopId }, adminSession.accessToken);
             // You would then trigger a re-fetch of the category list in CategoriesView
             onClose(true); // Close and signify a successful action
         } catch (error) {

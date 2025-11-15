@@ -70,7 +70,7 @@ const AddProductView = ({ onViewChange }) => {
                 // get seller data from sission storage 
                 const sellerData = JSON.parse(sessionStorage.getItem('sellerData'));
                 // Fetch shops
-                const shopsResponse = await sellers.getAllMyShops(sellerData.id, session.user.accessToken);
+                const shopsResponse = await sellers.getAllMyShops(sellerData.id, session.accessToken);
                 // const shopsData = await shopsResponse.json();
                 setShops(shopsResponse.shops);
 
@@ -149,7 +149,7 @@ const AddProductView = ({ onViewChange }) => {
                 }
             });
 
-            const response = await Products.createProduct(sellerSession.user.accessToken, formData);
+            const response = await Products.createProduct(sellerSession.accessToken, formData);
 
             if (response.message === "Product created successfully") {
                 toast.success("Product created successfully");

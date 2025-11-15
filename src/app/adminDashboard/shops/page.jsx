@@ -453,7 +453,7 @@ const ShopsView = () => {
         const fetchShops = async () => {
             try {
                 const adminSession = await getSession();
-                const res = await Shops.getAllShops(adminSession.user.accessToken);
+                const res = await Shops.getAllShops(adminSession.accessToken);
                 setShops(res.shops);
             } catch (error) {
                 console.error('Error fetching shops:', error);
@@ -506,7 +506,7 @@ const ShopsView = () => {
                 updatedData.cover = updatedData.coverFile;
             }
             // Call your API to update the shop
-            const res = await Shops.updateShop(shopId, updatedData, adminSession.user.accessToken);
+            const res = await Shops.updateShop(shopId, updatedData, adminSession.accessToken);
 
 
             // Update local state
@@ -515,7 +515,7 @@ const ShopsView = () => {
             // ));
 
             // refetch shops 
-            const res2 = await Shops.getAllShops(adminSession.user.accessToken);
+            const res2 = await Shops.getAllShops(adminSession.accessToken);
             setShops(res2.shops);
 
             setIsEditModalOpen(false);
@@ -535,10 +535,10 @@ const ShopsView = () => {
         try {
             const adminSession = await getSession();
             const updatedData = { status: 'active' };
-            const res = await Shops.updateShop(shop.id, updatedData, adminSession.user.accessToken);
+            const res = await Shops.updateShop(shop.id, updatedData, adminSession.accessToken);
             toast.success('Shop activated successfully!');
             // refetch shops 
-            const res2 = await Shops.getAllShops(adminSession.user.accessToken);
+            const res2 = await Shops.getAllShops(adminSession.accessToken);
             setShops(res2.shops);
         } catch (error) {
             console.error('Error activating shop:', error);
@@ -548,11 +548,11 @@ const ShopsView = () => {
         try {
             const adminSession = await getSession();
             const updatedData = { status: 'suspended' };
-            const res = await Shops.updateShop(shop.id, updatedData, adminSession.user.accessToken);
+            const res = await Shops.updateShop(shop.id, updatedData, adminSession.accessToken);
             toast.success('Shop suspended successfully!');
 
             // refetch shops 
-            const res2 = await Shops.getAllShops(adminSession.user.accessToken);
+            const res2 = await Shops.getAllShops(adminSession.accessToken);
             setShops(res2.shops);
         } catch (error) {
             console.error('Error suspending shop:', error);

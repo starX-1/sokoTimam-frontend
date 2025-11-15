@@ -515,7 +515,7 @@ const ShopsView = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All Statuses');
     const [seller, setSeller] = useState(null);
-    const {shops, setShops} = useShop()
+    const { shops, setShops } = useShop()
 
     useEffect(() => {
         const fetchShops = async () => {
@@ -524,8 +524,8 @@ const ShopsView = () => {
                 // get sellerData from session storage
                 const sellerData = JSON.parse(sessionStorage.getItem('sellerData'));
                 setSeller(sellerData);
-                const res = await sellers.getAllMyShops(sellerData.id, sellerSession.user.accessToken);
-                // const res = await Shops.getAllShops(sellerSession.user.accessToken);
+                const res = await sellers.getAllMyShops(sellerData.id, sellerSession.accessToken);
+                // const res = await Shops.getAllShops(sellerSession.accessToken);
                 setShopsData(res.shops);
                 setShops(res.shops);
             } catch (error) {
@@ -590,11 +590,11 @@ const ShopsView = () => {
             }
 
             // Call your API to update the shop
-            const res = await Shops.updateShop(shopId, formData, sellerSession.user.accessToken);
+            const res = await Shops.updateShop(shopId, formData, sellerSession.accessToken);
 
 
             // Refetch shopsData using the correct API call
-            const res2 = await sellers.getAllMyShops(seller.id, sellerSession.user.accessToken);
+            const res2 = await sellers.getAllMyShops(seller.id, sellerSession.accessToken);
             setShopsData(res2.shopsData);
 
             setIsEditModalOpen(false);
