@@ -2,8 +2,6 @@ import instance from "../../Hooks/axios";
 
 class Users {
     async getAll(user) {
-
-        console.log(user)
         try {
             const response = await instance.get('/user', {
                 headers: {
