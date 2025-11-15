@@ -53,7 +53,7 @@ const UsersView = ({ onViewChange }) => {
     const fetchAllUsers = async () => {
         try {
             const adminSession = await getSession();
-            setAdminDetails(adminSession.user);
+            setAdminDetails(adminSession);
             const response = await fetchUsers(adminSession)
             setUsers(response.users)
         } catch (error) {
@@ -80,6 +80,7 @@ const UsersView = ({ onViewChange }) => {
     });
 
     const handleActivateSeller = async (user) => {
+        // console.log(adminDetails)
         try {
             if (user.role === 'seller') {
                 const res = await sellers.adminMakeSellerVerified(user.id, { role: 'customer' }, adminDetails.accessToken);
